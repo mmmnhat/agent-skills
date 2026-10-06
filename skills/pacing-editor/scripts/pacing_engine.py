@@ -219,6 +219,9 @@ def calculate_hard_fast_cut(scene, delta_pre=1.0, delta_post=1.1, min_dur=2.0, m
         src_in += excess * 0.4
         src_out -= excess * 0.6
         
+    # Strictly clamp within physical bounds [0.0, raw_dur]
+    src_in = max(0.0, min(src_in, raw_dur - 0.2))
+    src_out = min(raw_dur, max(src_in + 0.2, src_out))
     return round(src_in, 3), round(src_out, 3)
 
 # --- 2. W-Curve Dynamic Narrative Reordering ---
@@ -299,6 +302,41 @@ def map_w_curve(bundles, target_duration=None):
     
     return w_curve_ordered
 
+def probe_physical_durations(scenes):
+    """
+    Scans physical .mp4 files on disk in parallel with ffprobe to get exact media container duration.
+    Prevents any discrepancy between split theoretical timestamps and container GOP boundaries.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    import subprocess
+    
+    files_to_probe = []
+    for sc in scenes:
+        p = sc.get("clip_path") or sc.get("file_path")
+        if p and os.path.exists(p):
+            files_to_probe.append(p)
+            
+    if not files_to_probe:
+        return {}
+        
+    def _probe_one(fpath):
+        try:
+            r = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", fpath],
+                capture_output=True, text=True, timeout=5
+            )
+            data = json.loads(r.stdout)
+            return fpath, float(data["format"]["duration"])
+        except Exception:
+            return fpath, None
+
+    dur_map = {}
+    with ThreadPoolExecutor(max_workers=16) as ex:
+        for fpath, d in ex.map(_probe_one, files_to_probe):
+            if d is not None:
+                dur_map[fpath] = d
+    return dur_map
+
 # --- 3. Master Pacing Plan Generator ---
 
 def generate_pacing_plan(
@@ -341,6 +379,15 @@ def generate_pacing_plan(
 
     if not scenes:
         raise ValueError("No valid scenes provided to pacing engine.")
+
+    # 0. Sync real physical media durations to eliminate zebra stripes and black gaps
+    phys_durs = probe_physical_durations(scenes)
+    for sc in scenes:
+        cp = sc.get("clip_path") or sc.get("file_path")
+        if cp in phys_durs:
+            real_d = round(phys_durs[cp], 3)
+            sc["duration"] = real_d
+            sc["duration_sec"] = real_d
 
     # 1. Bundle multi-shot incidents
     bundles = bundle_incidents(scenes)
@@ -398,6 +445,9 @@ def generate_pacing_plan(
             src_in = 0.0
             src_out = min(raw_dur, platform_cfg.get("max_clip_duration_sec", 4.5))
             
+        # Hard clamp within physical bounds
+        src_in = max(0.0, min(src_in, raw_dur - 0.1))
+        src_out = min(raw_dur, max(src_in + 0.1, src_out))
         effective_dur = round(src_out - src_in, 3)
         landmarks = sc.get("temporal_landmarks") or sc.get("motion_landmarks") or {}
         climax_raw = float(landmarks.get("action_peak_rel_sec") or landmarks.get("climax_sec") or (raw_dur * 0.55))

@@ -115,11 +115,33 @@ def assemble_sequence(manifest_path, target_bin="Scenes"):
             }}
         }}
 
-        // 4. Overwrite clips sequentially onto Track 0 (V1)
+        // 3.5 Clear existing clips and markers on sequence to avoid overlapping artifacts
+        for (var vi = 0; vi < seq.videoTracks.numTracks; vi++) {{
+            var vt = seq.videoTracks[vi];
+            for (var vci = vt.clips.numItems - 1; vci >= 0; vci--) {{
+                try {{ vt.clips[vci].remove(false, true); }} catch(ev) {{}}
+            }}
+        }}
+        for (var ai = 0; ai < seq.audioTracks.numTracks; ai++) {{
+            var at = seq.audioTracks[ai];
+            for (var aci = at.clips.numItems - 1; aci >= 0; aci--) {{
+                try {{ at.clips[aci].remove(false, true); }} catch(ea) {{}}
+            }}
+        }}
+        var curM = seq.markers.getFirstMarker();
+        while (curM) {{
+            var nextM = seq.markers.getNextMarker(curM);
+            seq.markers.deleteMarker(curM);
+            curM = nextM;
+        }}
+
+        // 4. Overwrite clips continuously without gaps (Butt-Cut Snap)
         var vTrack = seq.videoTracks[0];
         var specs = {json.dumps(clip_specs)};
         var placed = 0;
         var failed = 0;
+        var currentTime = 0.0;
+        var placedSpecs = [];
 
         for (var sIdx = 0; sIdx < specs.length; sIdx++) {{
             var s = specs[sIdx];
@@ -129,30 +151,55 @@ def assemble_sequence(manifest_path, target_bin="Scenes"):
                 continue;
             }}
 
-            if (s.sourceIn !== null && s.sourceOut !== null) {{
+            // Query natural media duration to guarantee 0 zebra stripes
+            item.clearInPoint();
+            item.clearOutPoint();
+            var mediaMax = item.getOutPoint().seconds;
+
+            var reqIn = (s.sourceIn !== null) ? s.sourceIn : 0.0;
+            var reqOut = (s.sourceOut !== null) ? s.sourceOut : mediaMax;
+
+            // Clamp sourceIn and sourceOut strictly within [0.0, mediaMax]
+            var srcIn = Math.max(0.0, Math.min(reqIn, mediaMax - 0.1));
+            var srcOut = Math.min(mediaMax, Math.max(srcIn + 0.1, reqOut));
+
+            try {{
+                item.setInPoint(srcIn, 4);
+                item.setOutPoint(srcOut, 4);
+            }} catch (e1) {{
                 try {{
-                    item.setInPoint(s.sourceIn, 4);
-                    item.setOutPoint(s.sourceOut, 4);
-                }} catch (e1) {{
-                    try {{
-                        item.setInPoint(s.sourceIn);
-                        item.setOutPoint(s.sourceOut);
-                    }} catch (e2) {{}}
-                }}
+                    item.setInPoint(srcIn);
+                    item.setOutPoint(srcOut);
+                }} catch (e2) {{}}
             }}
 
-            vTrack.overwriteClip(item, s.time);
+            var clipStart = currentTime;
+            vTrack.overwriteClip(item, clipStart);
             placed++;
+
+            // Snap currentTime to exact end of newly placed clip (guarantees mathematically 0 frame gaps)
+            var numPlaced = vTrack.clips.numItems;
+            if (numPlaced > 0) {{
+                var lastPlaced = vTrack.clips[numPlaced - 1];
+                currentTime = lastPlaced.end.seconds;
+            }} else {{
+                currentTime += (srcOut - srcIn);
+            }}
+
+            s.actualStart = clipStart;
+            s.actualEnd = currentTime;
+            placedSpecs.push(s);
         }}
 
-        // 5. Add markers for top climax beats
+        // 5. Add markers for top climax beats using actual placed clip start
         var markers = seq.markers;
         var markerCount = 0;
-        for (var mIdx = 0; mIdx < specs.length; mIdx++) {{
-            var ms = specs[mIdx];
+        for (var mIdx = 0; mIdx < placedSpecs.length; mIdx++) {{
+            var ms = placedSpecs[mIdx];
             if (ms.climax !== null && ms.score > 85.0 && markerCount < 15) {{
                 try {{
-                    var newMarker = markers.createMarker(ms.climax);
+                    var offset = Math.max(0.0, Math.min(ms.actualEnd - ms.actualStart, ms.climax - ms.time));
+                    var newMarker = markers.createMarker(ms.actualStart + offset);
                     newMarker.name = "Peak: " + ms.name + " (" + ms.role + ")";
                     newMarker.comments = "Score: " + ms.score;
                     newMarker.setColorByIndex(1); // Red highlight

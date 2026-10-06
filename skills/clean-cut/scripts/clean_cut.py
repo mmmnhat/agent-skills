@@ -733,6 +733,7 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         ])
         
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        item["duration"] = round(safe_dur, 3)
         tag_str = ""
         if item["deduplication"]["is_intra_duplicate"]:
             tag_str = " [Intra-Dup -> _duplicates/]"
