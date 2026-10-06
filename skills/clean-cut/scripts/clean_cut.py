@@ -525,12 +525,15 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         is_linked_reframe = False
 
         # Case 1: Hard Stitch (Single action false split by flash, rapid motion blur, or lighting change)
-        if (boundary_corr >= 0.58) or (mid_corr >= 0.62 and prev["aspect_ratio"] == s["aspect_ratio"]):
-            is_hard_stitch = True
-        elif (boundary_corr >= 0.35 or mid_corr >= 0.35) and prev["aspect_ratio"] == s["aspect_ratio"]:
-            inl = get_geometric_inliers(prev.get("tail_frame", prev.get("mid_frame")), s.get("head_frame", s.get("mid_frame")))
-            if inl >= 10:
+        # Note: When vision segments/decisions are provided, the AI Agent has already verified real vs false cuts,
+        # so we must NOT override vision decisions with heuristic color/ratio stitching!
+        if (segments is None and decisions is None):
+            if (boundary_corr >= 0.58) or (mid_corr >= 0.62 and prev["aspect_ratio"] == s["aspect_ratio"]):
                 is_hard_stitch = True
+            elif (boundary_corr >= 0.35 or mid_corr >= 0.35) and prev["aspect_ratio"] == s["aspect_ratio"]:
+                inl = get_geometric_inliers(prev.get("tail_frame", prev.get("mid_frame")), s.get("head_frame", s.get("mid_frame")))
+                if inl >= 10:
+                    is_hard_stitch = True
 
         if is_hard_stitch:
             # Merge seamlessly into prev shot so the action stays unbroken
