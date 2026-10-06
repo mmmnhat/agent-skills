@@ -240,7 +240,7 @@ def generate_fast_proxy(video_path, proxy_path, height=240):
         print(f"  ! Warning: Hardware proxy failed ({e}), falling back to master video.")
         return str(video_path)
 
-def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_duration=None, unblur=None, limit=None):
+def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_duration=None, unblur=None, limit=None, decisions=None, segments=None):
     cfg = load_config()
     out_dir = output_dir or cfg.get("output_dir", "output_clean_cut")
     pfx = prefix if prefix is not None else cfg.get("prefix", "scene_")
@@ -325,25 +325,67 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             pass
     scan_video = generate_fast_proxy(real_video, proxy_path, height=240)
 
-    # 1. Fast-Proxy Scene Detection via PySceneDetect in RAM
-    from scenedetect import open_video, SceneManager, ContentDetector
+    # 1. Fast-Proxy Scene Detection via PySceneDetect in RAM or Vision Decisions
+    from scenedetect import open_video, FrameTimecode
     video = open_video(scan_video)
     proxy_fps = video.frame_rate
     proxy_total_frames = video.duration.frame_num
     
-    sm = SceneManager()
-    sm.auto_downscale = False  # Proxy is already 240p
-    min_frames = max(5, int(min_dur * proxy_fps))
-    sm.add_detector(ContentDetector(threshold=det_thresh, min_scene_len=min_frames))
-    
-    sm.detect_scenes(video, frame_skip=0)
-    raw_scenes = sm.get_scene_list()
-    
-    if not raw_scenes:
-        from scenedetect import FrameTimecode
-        raw_scenes = [(FrameTimecode(0, proxy_fps), FrameTimecode(proxy_total_frames, proxy_fps))]
-    
-    print(f"  -> Detected {len(raw_scenes)} raw candidate cut points in RAM (Native 60fps frame-exact).")
+    raw_scenes = None
+    if segments and os.path.exists(segments):
+        print(f"  • Loading vision-verified scene boundaries from segments: {segments}")
+        with open(segments, "r", encoding="utf-8") as f:
+            s_data = json.load(f)
+        raw_scenes = []
+        for s in s_data.get("segments", []):
+            raw_scenes.append((FrameTimecode(s["start"], proxy_fps), FrameTimecode(s["end"], proxy_fps)))
+        print(f"  ✓ Loaded {len(raw_scenes)} vision-verified scenes.")
+    elif decisions and os.path.exists(decisions):
+        print(f"  • Parsing vision-verified decisions from: {decisions}")
+        cands_path = os.path.join(os.path.dirname(decisions), "cands.json")
+        if not os.path.exists(cands_path):
+            cands_path = os.path.join("_scene", video_stem, "cands.json")
+        if os.path.exists(cands_path):
+            with open(cands_path, "r", encoding="utf-8") as f:
+                c_data = json.load(f)
+            cands = c_data.get("cands", [])
+            bym = {m["n"]: m for m in cands}
+            d = {}
+            for ln in open(decisions, encoding="utf-8"):
+                ln = ln.split("#")[0].strip()
+                if not ln: continue
+                rng, lab = ln.split()[:2]
+                lo, hi = (rng.split("-") + [rng])[:2]
+                for i in range(int(lo), int(hi) + 1):
+                    d[i] = lab
+            labs = {n: d.get(n, "R") for n in bym}
+            cut = sorted((bym[n]["frame"], n) for n in bym if labs[n] in ("R", "R?"))
+            intro_end = max([bym[n]["frame"] for n in bym if labs[n] == "I"] + [0])
+            if intro_end == 0:
+                cut = [(0, 0)] + [c for c in cut if c[0] > 0]
+            else:
+                cut = [(intro_end, 0)] + [c for c in cut if c[0] > intro_end]
+            raw_scenes = []
+            N = c_data.get("N", proxy_total_frames)
+            for i, (f_num, n) in enumerate(cut):
+                e_num = cut[i + 1][0] if i + 1 < len(cut) else N
+                if f_num >= intro_end and (e_num - f_num) >= int(min_dur * proxy_fps * 0.7):
+                    raw_scenes.append((FrameTimecode(f_num, proxy_fps), FrameTimecode(e_num, proxy_fps)))
+            print(f"  ✓ Formed {len(raw_scenes)} clean scenes from vision decisions.")
+        else:
+            print("  ! Warning: cands.json not found, falling back to algorithmic detection.")
+
+    if raw_scenes is None:
+        from scenedetect import SceneManager, ContentDetector
+        sm = SceneManager()
+        sm.auto_downscale = False  # Proxy is already 240p
+        min_frames = max(5, int(min_dur * proxy_fps))
+        sm.add_detector(ContentDetector(threshold=det_thresh, min_scene_len=min_frames))
+        sm.detect_scenes(video, frame_skip=0)
+        raw_scenes = sm.get_scene_list()
+        if not raw_scenes:
+            raw_scenes = [(FrameTimecode(0, proxy_fps), FrameTimecode(proxy_total_frames, proxy_fps))]
+        print(f"  -> Detected {len(raw_scenes)} raw candidate cut points in RAM (Native 60fps frame-exact).")
 
     # 2. Extract Keyframes & Analyze Unblur, Continuity & Fingerprints (Directly on 1080p Master)
     cap_info = cv2.VideoCapture(real_video)
@@ -955,6 +997,8 @@ if __name__ == "__main__":
     parser.add_argument("--no-unblur", action="store_true", help="Disable automatic unblur cropping")
     parser.add_argument("-l", "--limit", type=int, default=None, help="Limit number of output scenes")
     parser.add_argument("-i", "--interactive", action="store_true", help="Run interactive configuration menu")
+    parser.add_argument("--decisions", default=None, help="Path to dec.txt containing vision-verified decisions")
+    parser.add_argument("--segments", default=None, help="Path to segments.json containing verified scene segments")
     
     args = parser.parse_args()
     
@@ -967,7 +1011,9 @@ if __name__ == "__main__":
             threshold=args.threshold,
             min_duration=args.min_duration,
             unblur=unblur_val,
-            limit=lim_val
+            limit=lim_val,
+            decisions=args.decisions,
+            segments=args.segments
         )
     else:
         run_clean_cut(
@@ -977,5 +1023,7 @@ if __name__ == "__main__":
             threshold=args.threshold,
             min_duration=args.min_duration,
             unblur=not args.no_unblur,
-            limit=args.limit
+            limit=args.limit,
+            decisions=args.decisions,
+            segments=args.segments
         )
