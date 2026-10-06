@@ -851,23 +851,74 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         print(f"=======================================================")
     return manifest_path
 
+def interactive_setup():
+    print("\n=======================================================")
+    print("🎬 [CLEAN-CUT] MENU CẤU HÌNH THỰC THI (INTERACTIVE SETUP)")
+    print("=======================================================")
+    cfg = load_config()
+    
+    # 1. Video source
+    video_in = input("📹 Đường dẫn video hoặc link YouTube: ").strip().strip('"').strip("'")
+    while not video_in:
+        print("  ! Lỗi: Vui lòng nhập đường dẫn video hợp lệ.")
+        video_in = input("📹 Đường dẫn video hoặc link YouTube: ").strip().strip('"').strip("'")
+        
+    # 2. Output directory
+    def_out = cfg.get("output_dir", "output_clean_cut")
+    out_in = input(f"📁 Thư mục lưu trữ output [{def_out}]: ").strip()
+    out_dir = out_in if out_in else def_out
+    
+    # 3. Prefix
+    def_pfx = cfg.get("prefix", "scene_")
+    pfx_in = input(f"🏷️ Tiền tố đặt tên clip (Prefix) [{def_pfx}]: ").strip()
+    prefix = pfx_in if pfx_in else def_pfx
+    
+    # 4. Unblur
+    def_unblur = cfg.get("unblur_enabled", True)
+    unblur_in = input(f"✨ Tự động bóc tách & khử viền mờ (Unblur) [{'Y/n' if def_unblur else 'y/N'}]: ").strip().lower()
+    if unblur_in:
+        unblur = (unblur_in in ["y", "yes", "1", "true"])
+    else:
+        unblur = def_unblur
+        
+    # 5. Limit
+    limit_in = input("🔢 Giới hạn số cảnh xuất (Enter để lấy toàn bộ): ").strip()
+    limit = int(limit_in) if limit_in.isdigit() else None
+    
+    print("=======================================================\n")
+    return video_in, out_dir, prefix, unblur, limit
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Clean-Cut: Precision Scene Splitter with Unblur, Deduplication, and Pacing Landmarks")
-    parser.add_argument("video", help="Path to video file or YouTube URL")
+    parser.add_argument("video", nargs="?", default=None, help="Path to video file or YouTube URL")
     parser.add_argument("-o", "--output-dir", default=None, help="Output directory")
     parser.add_argument("-p", "--prefix", default=None, help="Filename prefix (e.g. scene_)")
     parser.add_argument("-t", "--threshold", type=float, default=None, help="Detector sensitivity threshold (default: 27.0)")
     parser.add_argument("-m", "--min-duration", type=float, default=None, help="Minimum scene duration in seconds (default: 1.2)")
     parser.add_argument("--no-unblur", action="store_true", help="Disable automatic unblur cropping")
     parser.add_argument("-l", "--limit", type=int, default=None, help="Limit number of output scenes")
+    parser.add_argument("-i", "--interactive", action="store_true", help="Run interactive configuration menu")
     
     args = parser.parse_args()
-    run_clean_cut(
-        video_path=args.video,
-        output_dir=args.output_dir,
-        prefix=args.prefix,
-        threshold=args.threshold,
-        min_duration=args.min_duration,
-        unblur=not args.no_unblur,
-        limit=args.limit
-    )
+    
+    if not args.video or args.interactive:
+        v_in, o_in, p_in, unblur_val, lim_val = interactive_setup()
+        run_clean_cut(
+            video_path=v_in,
+            output_dir=o_in,
+            prefix=p_in,
+            threshold=args.threshold,
+            min_duration=args.min_duration,
+            unblur=unblur_val,
+            limit=lim_val
+        )
+    else:
+        run_clean_cut(
+            video_path=args.video,
+            output_dir=args.output_dir,
+            prefix=args.prefix,
+            threshold=args.threshold,
+            min_duration=args.min_duration,
+            unblur=not args.no_unblur,
+            limit=args.limit
+        )

@@ -21,18 +21,34 @@ Activate this skill whenever the user:
 
 You **MUST** follow this structured 4-phase interaction protocol with the user:
 
-### Phase 1: Pre-Execution Confirmation
-When the user supplies a video path or URL:
-1. Read the current settings from [`config.json`](./config.json).
-2. Present a concise summary table in chat:
-   - **Video Source**: `<file or URL>`
-   - **Output Directory**: `<output_dir>` (default: `output_clean_cut/`)
-   - **Prefix**: `<prefix>` (default: `scene_`)
-   - **Unblur Cropping**: `Bật (Tự phát hiện & crop sạch viền mờ về 9:16 / 1:1 / 4:3)`
-   - **Khử trùng lặp**: `Bật (Lọc Teaser <30s vào _duplicates/ & đối chiếu library_index.json)`
-3. Ask the user if they wish to adjust any parameters or proceed immediately.
+### Phase 1: Pre-Execution Interactive Menu & Confirmation
+
+> [!CAUTION]
+> **QUY TẮC BẮT BUỘC: KHÔNG TỰ ĐỘNG CHẠY NGAY KHI CHƯA HỎI NGƯỜI DÙNG**
+> Khi người dùng cung cấp link video hoặc yêu cầu tách cảnh, Agent **TUYỆT ĐỐI KHÔNG** âm thầm chạy ngay với tham số mặc định.
+> Agent **PHẢI DỪNG LẠI** và sử dụng công cụ `ask_question` (hoặc hiển thị menu cấu hình rõ ràng) để hỏi người dùng:
+> 1. **Thư mục lưu trữ Output (`--output-dir`)**: Mặc định `output_clean_cut/` hay thư mục tùy chỉnh?
+> 2. **Tiền tố đặt tên clip (`--prefix`)**: Mặc định `scene_` hay tiền tố khác (VD: `clip_`, `part_`)?
+> 3. **Tùy chọn bổ sung**: Bật/tắt Unblur (`--no-unblur`), giới hạn số cảnh (`--limit`)?
+> 
+> *Chỉ khi người dùng xác nhận cấu hình hoặc bấm chọn từ menu, Agent mới bắt đầu thực thi!*
+
+Tóm tắt cấu hình cần xác nhận với người dùng:
+| Thông số | Giá trị đề xuất (Mặc định) | Ý nghĩa |
+| :--- | :--- | :--- |
+| **Video Source** | `<file or URL>` | Video nguồn cần bóc tách |
+| **Output Directory** | `output_clean_cut/` | Thư mục lưu trữ (tự tạo `scenes/`, `thumbnails/`, `manifests/`) |
+| **Prefix** | `scene_` | Tiền tố tên clip (`scene_001.mp4`...) |
+| **Unblur Cropping** | `Bật` | Tự nhận diện và crop sạch viền mờ 9:16 / 1:1 / 4:3 |
+| **Deduplication** | `Bật` | Lọc teaser trùng lặp vào `duplicates/intra/` |
+
 
 ### Phase 2: Execution & Progress Milestones
+
+> [!IMPORTANT]
+> **Quy tắc dọn dẹp sạch sẽ (Clean-slate Protocol)**:
+> Mỗi khi chạy lại hoặc test lại video mới/tham số mới, skill tự động dọn sạch thư mục output cũ (xóa hết clip cũ, thumbnail cũ, manifest cũ) trước khi render, tránh để file thừa của lần chạy trước lẫn lộn. Bộ nhớ đệm proxy được giữ lại để tăng tốc độ.
+
 Run the underlying script:
 ```bash
 python .agents/skills/clean-cut/scripts/clean_cut.py "<path_to_video>" [options]
@@ -40,7 +56,7 @@ python .agents/skills/clean-cut/scripts/clean_cut.py "<path_to_video>" [options]
 Briefly inform the user at key milestones:
 - **Milestone 1**: Đang quét nhanh trong RAM (phát hiện số candidate shot).
 - **Milestone 2**: Báo cáo số scene unblur, số clip teaser/replay trùng bị chuyển vào `_duplicates/`, và số clip trùng lặp từ library (`_cross_duplicates/`).
-- **Milestone 3**: Hoàn tất render phần cứng (`h264_nvenc`) và lưu manifest [`scenes_context.json`](./scenes_context.json).
+- **Milestone 3**: Hoàn tất render phần cứng (`h264_videotoolbox` / `h264_nvenc`) và lưu manifest [`scenes_context.json`](./scenes_context.json).
 
 ### Phase 3: Result Presentation
 Format the final response with:
