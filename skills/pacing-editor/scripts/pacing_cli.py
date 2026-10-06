@@ -17,10 +17,10 @@ if hasattr(sys.stderr, "reconfigure"):
 
 try:
     from pacing_engine import generate_pacing_plan
-    from timeline_assembler import generate_premiere_mcp_actions, render_standalone_master
+    from timeline_assembler import generate_premiere_mcp_actions, generate_fcp_xml, render_standalone_master
 except ImportError:
     from .pacing_engine import generate_pacing_plan
-    from .timeline_assembler import generate_premiere_mcp_actions, render_standalone_master
+    from .timeline_assembler import generate_premiere_mcp_actions, generate_fcp_xml, render_standalone_master
 
 def interactive_setup():
     print("\n=======================================================")
@@ -78,7 +78,7 @@ def interactive_setup():
 def main():
     parser = argparse.ArgumentParser(description="Pacing-Editor: High-Retention Sequencing & Sound Design Engine (v2.0)")
     parser.add_argument("--scenes-json", "-s", help="Path to scenes_context.json from clean-cut / clip-inspector")
-    parser.add_argument("--input-dir", "-i", help="Directory of video clips to assemble")
+    parser.add_argument("--input-dir", "-d", help="Directory of video clips to assemble")
     parser.add_argument("--name", default="Pacing_Master_Sequence", help="Target Sequence Name")
     parser.add_argument("--interactive", "-i", action="store_true", help="Launch interactive configuration wizard")
     parser.add_argument("--platform", default="reels_shorts", choices=["reels_shorts", "landscape_youtube"], help="Target export platform")
@@ -156,7 +156,11 @@ def main():
         plan_file = manifest_file.with_name(f"{manifest_file.stem}_premiere_mcp_plan.json")
         with open(plan_file, "w", encoding="utf-8") as f:
             json.dump(actions, f, indent=2, ensure_ascii=False)
-        print(f"\n  ✓ Premiere Pro Studio 5-Track Plan ({len(actions)} actions): {plan_file.name}")
+        print(f"\n  ✓ Premiere Pro Batch MCP Plan ({len(actions)} atomic calls): {plan_file.name}")
+
+        xml_file = manifest_file.with_name(f"{manifest_file.stem}.xml")
+        generate_fcp_xml(manifest, xml_file)
+        print(f"  ✓ Premiere Pro FCP7 XML Sequence (Single-shot import): {xml_file.name}")
 
     if seq_render:
         exports_dir = out_base / "exports" if out_base.is_dir() else out_base.parent / "exports"

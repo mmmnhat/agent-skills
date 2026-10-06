@@ -87,32 +87,41 @@ python e:\.agents\skills\pacing-editor\scripts\pacing_cli.py \
   --mode w-curve \
   --target-duration 30 \
   --premiere-plan
-```
-  --scenes-json "E:\test-dung-ai\output_clean_cut_18\scenes_context.json" \
+```bash
+python .agents/skills/pacing-editor/scripts/pacing_cli.py \
+  --scenes-json "output_clean_cut/manifests/scenes_context.json" \
   --name "Dailycam_Preview" \
   --render
 ```
 
 ### 3. Assemble Folder of Clips with Custom SFX & BGM
 ```bash
-python e:\.agents\skills\pacing-editor\scripts\pacing_cli.py \
-  --input-dir "E:\test-dung-ai\output_clean_cut_18" \
+python .agents/skills/pacing-editor/scripts/pacing_cli.py \
+  --input-dir "output_clean_cut/scenes" \
   --platform reels_shorts \
   --premiere-plan
 ```
 
 ---
 
-## Premiere Pro MCP Execution
+## Premiere Pro MCP Execution (High-Speed Batch Architecture)
 
-When executing via Premiere Pro MCP:
-1. `create_sequence(name="Dailycam_Reels_Master")`
-2. `import_media(file_path=...)` for footage, SFX, and BGM assets.
-3. For each video clip on Track `V1`:
-   - `add_to_timeline(item_id=clip, track_index=0, audio_track_index=0, start_seconds=in_time)`
-   - `set_time_interpolation(node_id=clip, interpolation_type=2)` (Optical Flow)
-   - `add_marker(name="Climax: scene_001", time_seconds=climax_time)`
-4. For sound design:
-   - Transition Whooshes placed at edit cuts on Audio Track `1` (`A2`).
-   - Climax Hits placed at peak timestamps on Audio Track `1` (`A2`).
-   - BGM placed on Audio Track `2` (`A3`) with volume ducking.
+⚡️ **CRITICAL PERFORMANCE RULE**:
+**NEVER execute per-clip `add_to_timeline` in a sequential loop!** Calling 60+ individual tool calls across CEP bridge takes 90–120 seconds. ALWAYS use atomic batch execution:
+
+### 🚀 Method 1: Atomic Batch MCP (`add_to_timeline_batch`) — [0.9s Speed]
+1. **Import Media**: Import required unique clips via `import_media` (or `import_folder`).
+2. **Prepare Target Sequence**: Call `duplicate_sequence(sequenceId=..., newName="...", clearContents=true)` to create a blank target sequence inheriting exact resolution and framerate.
+3. **Batch Video Track (V1) + Linked Audio (A1)**:
+   - Call `add_to_timeline_batch` once with all clips containing `projectItemId`, `trackIndex: 0`, `time`, `sourceInPoint`, `sourceOutPoint`, `linkAudio: true`.
+   - Places 15–50 clips with sub-frame precision in **under 1 second**.
+4. **Batch Audio Design (A3, A4, A5)**:
+   - Call `add_to_timeline_batch` once for SFX Whoosh (`trackIndex: 2`), Climax Hits (`trackIndex: 3`), and BGM (`trackIndex: 4`).
+   - Track `A2` (index 1) is kept clean for voiceover.
+5. **Key Climax Markers**:
+   - Call `add_marker` only for the top 3–5 dramatic peaks.
+
+### ⚡ Method 2: Final Cut Pro 7 XML Import (`import_fcp_xml`) — [Single-Shot Import]
+1. `pacing_cli.py` automatically generates a standardized `manifests/<sequence_name>_manifest.xml`.
+2. Call `import_fcp_xml(filePath="path/to/manifest.xml")` — exactly **ONE tool call**.
+3. Premiere Pro imports all 5 tracks, source trims, and markers natively.
