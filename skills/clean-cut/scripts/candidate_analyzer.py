@@ -142,7 +142,7 @@ def analyze_video(video_path, work_dir=None, min_content=15.0, adaptive=1.8, max
         raise FileNotFoundError(f"Video file not found: {video}")
         
     name = Path(video).stem
-    W = os.path.abspath(work_dir) if work_dir else os.path.join(os.path.dirname(video), "_scene", name)
+    W = os.path.abspath(work_dir) if work_dir else os.path.join(os.path.dirname(video), "output_clean_cut")
     os.makedirs(W, exist_ok=True)
     
     info = probe_video(video)
