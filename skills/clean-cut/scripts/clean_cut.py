@@ -463,12 +463,13 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
                     prev["aspect_ratio"] = "16:9"
             continue
 
-        # Case 2: Multi-shot Incident Linking (Different angle, zoom reframe, or replay of the SAME incident)
-        is_hash_match, dist, sim, is_flipped = match_hashes(
-            prev["hash_orig"], s["hash_orig"], s["hash_flip"], max_dist=12
-        )
-        if is_hash_match or (mid_corr >= 0.40 and s["aspect_ratio"] != prev["aspect_ratio"]):
-            is_linked_reframe = True
+        # Case 2: Multi-shot Incident Linking (Replay or alternate angle of the SAME incident)
+        if segments is None and decisions is None:
+            is_hash_match, dist, sim, is_flipped = match_hashes(
+                prev["hash_orig"], s["hash_orig"], s["hash_flip"], max_dist=8
+            )
+            if is_hash_match:
+                is_linked_reframe = True
 
         if is_linked_reframe:
             # Separate file, but grouped under the same incident_id
