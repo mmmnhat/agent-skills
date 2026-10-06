@@ -419,6 +419,8 @@ def cmd_review(a):
     intro_end = max([bym[n]['frame'] for n in bym if labs[n] == 'I'] + [0])
     if intro_end == 0:
         cut = [(0, 0)] + [c for c in cut if c[0] > 0]
+    else:
+        cut = [(intro_end, 0)] + [c for c in cut if c[0] > intro_end]
     segs = []
     for i, (f, n) in enumerate(cut):
         e = cut[i + 1][0] if i + 1 < len(cut) else N
