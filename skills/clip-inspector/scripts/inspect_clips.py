@@ -27,10 +27,12 @@ try:
     from unblur_detector import detect_unblur_box
     from phash_utils import compute_dual_phash, match_hashes
     from temporal_analyzer import analyze_and_generate_filmstrip
+    from scene_context_engine import synthesize_scene_context
 except ImportError:
     from .unblur_detector import detect_unblur_box
     from .phash_utils import compute_dual_phash, match_hashes
     from .temporal_analyzer import analyze_and_generate_filmstrip
+    from .scene_context_engine import synthesize_scene_context
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v", ".flv"}
@@ -245,6 +247,7 @@ def inspect_clip_folder(folder_path, output_dir=None, check_unblur=None, check_d
                 "clip_name": f"Clip_{idx:03d}_{clip_file.stem[:20]}"
             }
         }
+        scene_info["context"] = synthesize_scene_context(scene_info, source_title=target_path.name)
         scenes.append(scene_info)
         
         blur_tag = " [Blurred Margins Detected]" if has_blur else ""

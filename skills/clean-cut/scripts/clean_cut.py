@@ -29,11 +29,13 @@ try:
     from audio_snapper import load_audio_buffer, snap_audio_cut_in_ram
     from phash_utils import compute_dual_phash, match_hashes
     from temporal_analyzer import analyze_and_generate_filmstrip
+    from scene_context_engine import synthesize_scene_context
 except ImportError:
     from .unblur_detector import detect_unblur_box
     from .audio_snapper import load_audio_buffer, snap_audio_cut_in_ram
     from .phash_utils import compute_dual_phash, match_hashes
     from .temporal_analyzer import analyze_and_generate_filmstrip
+    from .scene_context_engine import synthesize_scene_context
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
@@ -656,6 +658,7 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             "all_incident_clips": all_clip_names,
             "note": f"CÙNG CẢNH với {', '.join(other_clips)}" if grp["is_multi_shot"] else "Cảnh độc lập (đơn cú máy)"
         }
+        item["context"] = synthesize_scene_context(item, source_title=video_stem)
 
     multi_shot_incidents = [g for g in incident_groups_map.values() if g["is_multi_shot"]]
 

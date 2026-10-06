@@ -84,6 +84,22 @@
               "out_point": { "type": "number" },
               "clip_name": { "type": "string" }
             }
+          },
+          "context": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "narrative_role": { "type": "string" },
+              "situation_summary": { "type": "string" },
+              "action_type": { "type": "string" },
+              "motion_intensity": { "type": "string" },
+              "mood": { "type": "string" },
+              "visual": { "type": "object" },
+              "audio": { "type": "object" },
+              "continuity": { "type": "object" },
+              "tags": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["title", "narrative_role", "situation_summary", "action_type", "motion_intensity", "mood"]
           }
         }
       }
