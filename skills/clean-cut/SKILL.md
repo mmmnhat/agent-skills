@@ -1,99 +1,137 @@
 ---
 name: clean-cut
-description: Precision video scene splitter and unblur engine. Automatically scans videos at high speed (over 3,000 fps in RAM), strips blurred pillarbox/letterbox margins to native aspect ratios (9:16, 1:1, 4:3), links dynamic reframes/zooms of the same incident, filters intra-video teaser duplicates and cross-video library duplicates, and snaps cuts to audio zero-crossings. Produces rich `scenes_context.json` for Premiere Pro MCP. Use when the user pastes a video file/URL or asks to "tách scene", "crop nền mờ", "bóc clip", "clean cut", "unblur video", or "khử trùng lặp video".
+description: >-
+  Precision AI video scene splitter, unblur engine, and visual narrative guard.
+  Scans videos at high speed (>3,000 fps), uses AI Agent Vision (view_file) to
+  inspect visual contact sheets and autonomously classify cuts (R/F/I), dynamically
+  drops arbitrary intros/disclaimers without hardcoded limits, merges fragmented
+  actions into complete narrative arcs, strips blurred margins (9:16, 1:1, 4:3),
+  and produces verified scenes_context.json for Premiere Pro MCP.
+  Use when the user pastes a video file/URL or asks to "tách scene", "crop nền mờ",
+  "bóc clip", "clean cut", "unblur video", "cắt cảnh", or "khử trùng lặp video".
 license: MIT
 ---
 
-# Clean Cut
+# 🎬 Clean Cut — Precision AI Scene Detection, Vision Verification & Unblur Engine
 
-High-speed scene detection, native unblur crop, incident linking, 2-tier deduplication, and audio zero-crossing protection.
+Hệ thống bóc tách cảnh video chính xác thế hệ mới kết hợp giữa **thuật toán quét siêu tốc trong RAM (>3.200 fps)** và **mắt AI kiểm duyệt trực quan (AI Agent Vision Review)**. 
 
-## When to Use
-
-Activate this skill whenever the user:
-- Pastes a video file path (`.mp4`, `.mov`, `.mkv`) or YouTube URL asking to split it.
-- Says: "tách scene", "cắt cảnh", "crop nền mờ", "unblur", "clean-cut", "bóc tách footage".
-- Requests deduplication across video compilation folders or within a single video.
+Skill hoạt động theo chế độ **Agent Tự Chủ Hoàn Toàn (Autonomous Lead-Editor Mode)**: tự động quét, tự xem ảnh Contact Sheets, tự phán quyết ranh giới cảnh thật (`R`), tự gộp các pha hành động bị băm vụn (`F`), tự động loại bỏ Intro/Thẻ cảnh báo động (`I`) mà không cần người dùng can thiệp thủ công.
 
 ---
 
-## Agent Interaction Workflow
-
-You **MUST** follow this structured 4-phase interaction protocol with the user:
-
-### Phase 1: Pre-Execution Interactive Menu & Confirmation
-
-> [!CAUTION]
-> **QUY TẮC BẮT BUỘC: KHÔNG TỰ ĐỘNG CHẠY NGAY KHI CHƯA HỎI NGƯỜI DÙNG**
-> Khi người dùng cung cấp link video hoặc yêu cầu tách cảnh, Agent **TUYỆT ĐỐI KHÔNG** âm thầm chạy ngay với tham số mặc định.
-> Agent **PHẢI DỪNG LẠI** và sử dụng công cụ `ask_question` (hoặc hiển thị menu cấu hình rõ ràng) để hỏi người dùng:
-> 1. **Thư mục lưu trữ Output (`--output-dir`)**: Mặc định `output_clean_cut/` hay thư mục tùy chỉnh?
-> 2. **Tiền tố đặt tên clip (`--prefix`)**: Mặc định `scene_` hay tiền tố khác (VD: `clip_`, `part_`)?
-> 3. **Tùy chọn bổ sung**: Bật/tắt Unblur (`--no-unblur`), giới hạn số cảnh (`--limit`)?
-> 
-> *Chỉ khi người dùng xác nhận cấu hình hoặc bấm chọn từ menu, Agent mới bắt đầu thực thi!*
-
-Tóm tắt cấu hình cần xác nhận với người dùng:
-| Thông số | Giá trị đề xuất (Mặc định) | Ý nghĩa |
-| :--- | :--- | :--- |
-| **Video Source** | `<file or URL>` | Video nguồn cần bóc tách |
-| **Output Directory** | `output_clean_cut/` | Thư mục lưu trữ (tự tạo `scenes/`, `thumbnails/`, `manifests/`) |
-| **Prefix** | `scene_` | Tiền tố tên clip (`scene_001.mp4`...) |
-| **Unblur Cropping** | `Bật` | Tự nhận diện và crop sạch viền mờ 9:16 / 1:1 / 4:3 |
-| **Deduplication** | `Bật` | Lọc teaser trùng lặp vào `duplicates/intra/` |
-
-
-### Phase 2: Execution & Progress Milestones
+## ⚡ Nguyên Tắc Cốt Lõi: Agent Tự Quyết Định (Zero Manual Friction)
 
 > [!IMPORTANT]
-> **Quy tắc dọn dẹp sạch sẽ (Clean-slate Protocol)**:
-> Mỗi khi chạy lại hoặc test lại video mới/tham số mới, skill tự động dọn sạch thư mục output cũ (xóa hết clip cũ, thumbnail cũ, manifest cũ) trước khi render, tránh để file thừa của lần chạy trước lẫn lộn. Bộ nhớ đệm proxy được giữ lại để tăng tốc độ.
+> **Agent là Lead Editor tự chủ — phán quyết dứt khoát bằng mắt AI nhìn vào frame thực tế!**
+>
+> 1. **AI Vision Thẩm Định Trực Tiếp (Bắt Buộc):**
+>    - Sau khi thuật toán quét thô các điểm cắt nghi vấn, Agent **tự động dùng công cụ `view_file`** để kiểm duyệt các ảnh lưới Contact Sheets (`sheet_*.jpg`, mỗi ô gồm `frame-20 | frame-1 | vạch đỏ | frame 0 | frame+20`) hoặc Filmstrips 4-panel.
+>    - Thuật toán số (luma/histogram/SSIM) chỉ là bước lọc thô. Phán quyết cắt/gộp/bỏ cuối cùng **bắt buộc dựa trên mắt AI nhìn vào hình ảnh thực tế**, giải quyết triệt để lỗi dính 2 cảnh khác nhau (under-split) hoặc cắt lửng hành động (over-split).
+>
+> 2. **Nhận Diện Intro Động (Dynamic Intro Detection — Không Giả Định Số Lượng):**
+>    - **TUYỆT ĐỐI KHÔNG GÁN CỨNG SỐ LƯỢNG INTRO:** Intro không nhất thiết là 8 cảnh đầu, 3 cảnh đầu hay giới hạn 20s/30s! Có video có 0 cảnh intro, có video có 1 thẻ cảnh báo, có video có 12 clip teaser ngắn.
+>    - **Dấu hiệu nhận biết Intro (`I`):** 
+>      - Thẻ chữ cảnh báo, miễn trừ trách nhiệm ("WARNING", "DISCLAIMER", "CHÚ Ý", "FOR ENTERTAINMENT ONLY").
+>      - Logo kênh đồ họa 3D, màn hình đếm ngược, bumper intro.
+>      - Teaser montage dạo đầu cắt chớp nhoáng (<1.5s/shot) lấy trích đoạn từ các clip sau.
+>    - **Ranh giới bắt đầu Clip #1:** Luôn là thời điểm bắt đầu của **tình huống/hành động thực tế liên tục đầu tiên**. Toàn bộ phân đoạn trước ranh giới này được gán nhãn `I` và loại bỏ sạch sẽ.
+>
+> 3. **Bảo Toàn Trọn Vẹn Diễn Biến Hành Động (`F` Merge):**
+>    - Các hiện tượng gây nhảy ngưỡng thuật toán: lia máy nhanh (whip pan), chớp sáng (flash), cháy nổ, rung lắc camera, bọt nước tung toé, hoặc replay góc 2 / zoom cận cảnh của cùng 1 biến cố $\to$ **Agent tự động gán nhãn `F` (Merge)** để kéo dài clip trước, tạo 1 clip trọn vẹn narrative arc (setup $\to$ climax $\to$ recovery).
+>
+> 4. **Tự Động Cắt Phần Cứng & Chuẩn Hóa Premiere Pro MCP:**
+>    - Tự động tận dụng GPU phần cứng tốt nhất (`h264_videotoolbox` trên Apple Silicon, `h264_nvenc` trên Windows) với cú pháp frame-accurate `-frames:v`.
+>    - Tự động unblur crop viền mờ 9:16 / 1:1 / 4:3 về độ phân giải gốc.
+>    - Tự động sinh bộ 4-Frame Filmstrips và xuất manifest `scenes_context.json` sẵn sàng import lên Premiere Pro timeline.
 
-Run the underlying script:
+---
+
+## 🔄 Quy Trình Thực Thi 4 Giai Đoạn (Autonomous Protocol)
+
+### Giai đoạn 1: Quét Candidate Cuts & Sinh Contact Sheets
+1. **Quét siêu tốc trong RAM:** Chạy phân tích proxy để thu thập toàn bộ các điểm cắt nghi vấn (candidate cuts).
+2. **Sinh Contact Sheets trực quan:** Xuất các sheet dạng lưới (24 điểm cắt/sheet) hiển thị rõ ràng 4 thời điểm quanh điểm cắt: `N-20 | N-1 | [CẮT] | N+0 | N+20`.
+
 ```bash
-python .agents/skills/clean-cut/scripts/clean_cut.py "<path_to_video>" [options]
+# Phân tích sinh candidate cuts và contact sheets
+python .agents/skills/clean-cut/scripts/clean_cut.py "<path_to_video>" --work-dir "_scene/<video_name>" --analyze-only
 ```
-Briefly inform the user at key milestones:
-- **Milestone 1**: Đang quét nhanh trong RAM (phát hiện số candidate shot).
-- **Milestone 2**: Báo cáo số scene unblur, số clip teaser/replay trùng bị chuyển vào `_duplicates/`, và số clip trùng lặp từ library (`_cross_duplicates/`).
-- **Milestone 3**: Hoàn tất render phần cứng (`h264_videotoolbox` / `h264_nvenc`) và lưu manifest [`scenes_context.json`](./scenes_context.json).
-
-### Phase 3: Result Presentation
-Format the final response with:
-1. **Thống kê tổng quan**: Số scene sạch, số clip unblur, số clip trùng đã lọc.
-2. **Bảng Markdown chi tiết** có link trực tiếp `file:///...`:
-
-| Clip ID | Tên File & Link | Thời lượng | Tỉ lệ | Nhóm sự kiện (Incident) | Ghi chú |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 01 | [`scene_001.mp4`](file:///...) | 4.2s | 16:9 | Sự kiện #1 (Shot 1/2) | Cảnh gốc |
-| 02 | [`scene_002.mp4`](file:///...) | 3.1s | 9:16 | Sự kiện #1 (Shot 2/2) | Zoom cận cảnh (Linked) |
-| ... | ... | ... | ... | ... | ... |
-
-*(Nếu có clip trùng lặp, liệt kê tóm tắt các clip đã chuyển vào folder `_duplicates/` hoặc `_cross_duplicates/`).*
-
-### Phase 4: Proactive Hand-off
-Proactively ask the user via interactive options:
-- **Lựa chọn 1**: *"Chạy `video-transform` để scale, rotate, flip biến đổi các clip này chống bản quyền."*
-- **Lựa chọn 2**: *"Đưa các clip này vào Premiere Pro để bắt đầu dựng sequence."*
-- **Lựa chọn 3**: *"Hoàn tất, tôi sẽ tự kiểm tra."*
 
 ---
 
-## Premiere Pro MCP Integration Protocol
+### Giai đoạn 2: 👁️ AI Agent Vision Review (Thẩm Định & Gán Nhãn)
+Agent tự mở và duyệt các Contact Sheets bằng `view_file` (đọc 3-4 sheets mỗi lượt hoặc gọi subagent song song nếu video dài $\ge 50$ scenes).
 
-If the user chooses to import into Premiere Pro:
-1. Check Premiere connection: `call_mcp_tool(ServerName="premiere-pro", ToolName="verify_premiere_connection")`.
-2. Propose a Sequence name (e.g., `CleanCut_<VideoName>`).
-3. Import the clean clips from the output folder into a dedicated Project Bin.
-4. Add clips sequentially to Timeline Track V1.
-5. For clips marked with `is_continuation: true` (reframe/zoom), place them directly after their parent shot or on Track V2 with markers indicating the incident link.
+Agent gán nhãn cho từng điểm cắt:
+| Nhãn | Ý nghĩa | Hành động của Agent |
+| :---: | :--- | :--- |
+| **`R`** | **Real Cut** | Hai bên vạch đỏ là 2 cảnh/sự việc/bối cảnh/nhân vật độc lập $\to$ **Tạo điểm cắt mới**. |
+| **`F`** | **False Cut (Merge)** | Hai bên vạch đỏ là cùng 1 sự việc (lia máy, flash, bọt nước, ngã tiếp đất, replay góc 2) $\to$ **Gộp vào cảnh trước**. |
+| **`I`** | **Intro / Outro (Drop)** | Thẻ cảnh báo disclaimer, teaser montage dạo đầu, logo kênh, outro $\to$ **Bỏ hoàn toàn**. |
+
+#### 🎯 Bộ quy tắc phán quyết của Agent:
+- **Dò Intro:** Xem từ sheet 01 trở đi. Nếu các ô liên tiếp là chữ WARNING / disclaimer hoặc montage teaser cắt nhanh $\to$ gán `I`. Ngay khi bắt đầu cảnh quay thực tế đầu tiên $\to$ chốt kết thúc Intro. Clip 1 bắt đầu chính xác từ frame đầu tiên của cảnh này.
+- **Tránh dính 2 cảnh (Under-split):** Nếu ô bên trái là cảnh A (ngoài trời, hồ bơi), ô bên phải là cảnh B (trong nhà, ẩu đả) $\to$ bắt buộc là `R`.
+- **Tránh cắt lửng hành động (Over-split):** Nếu ô bên trái là người bắt đầu nhảy, ô bên phải là người đang rơi giữa không trung hoặc đang tiếp đất $\to$ bắt buộc là `F` (gộp).
 
 ---
 
-## Companion Scripts Reference
+### Giai đoạn 3: Cắt Phần Cứng Frame-Accurate & Unblur Cropping
+Sau khi chốt nhãn phân đoạn:
+1. **Cắt clip chuẩn từng frame:** Sử dụng `-ss` và `-frames:v` qua GPU (`videotoolbox` / `nvenc`) để xuất ra thư mục `scenes/`.
+2. **Unblur Crop tự động:** Phát hiện viền mờ 9:16/1:1/4:3 bằng năng lượng biên Sobel/Laplacian variance và crop về tỉ lệ gốc nếu bật unblur.
+3. **Snap audio zero-crossing:** Tránh tiếng nổ "pop/click" ở mép cắt âm thanh.
 
-- **Main Runner**: [`scripts/clean_cut.py`](./scripts/clean_cut.py)
-- **Unblur Detector**: [`scripts/unblur_detector.py`](./scripts/unblur_detector.py)
-- **Audio Snapper**: [`scripts/audio_snapper.py`](./scripts/audio_snapper.py)
-- **pHash & Flip Matching**: [`scripts/phash_utils.py`](./scripts/phash_utils.py)
-- **Multi-folder Deduplication**: [`scripts/deduplicate.py`](./scripts/deduplicate.py)
+```bash
+# Render phần cứng toàn bộ các scene đã được duyệt
+python .agents/skills/clean-cut/scripts/clean_cut.py "<path_to_video>" \
+  --output-dir "output_clean_cut" \
+  --prefix "fail_" \
+  --decisions "_scene/<video_name>/dec.txt" \
+  --overwrite
+```
+
+---
+
+### Giai đoạn 4: Tạo Visual Filmstrips & Xuất Manifest Premiere Pro MCP
+
+1. **Bộ 4-Frame Filmstrips (`thumbnails/<prefix>_NNN_strip.jpg`):**
+   Mỗi clip được chụp 4 mốc (0%, 33%, 66%, 100%) ghép thành ảnh ngang 1280x180 để người dùng và AI có thể nhìn lướt toàn bộ danh sách footage trong vài giây.
+2. **Xuất `scenes_context.json`:**
+   Chứa đầy đủ thông số kỹ thuật, mốc cao trào `temporal_landmarks` (lead-in, climax, recovery), độ phân giải, và mapping Premiere Pro timeline Track V1/V2.
+3. **Báo Cáo Tổng Hợp:**
+   Trình bày bảng Markdown sạch đẹp có link `file:///...` trực tiếp đến các clip và filmstrip đã hoàn tất.
+
+---
+
+## 🎬 Tích Hợp Premiere Pro MCP
+
+Sau khi hoàn tất bóc tách cảnh:
+1. Gọi `verify_premiere_connection` từ server `premiere-pro`.
+2. Tạo Sequence mới hoặc sử dụng Sequence đang mở (hỏi người dùng tùy chọn nếu cần).
+3. Import tất cả các clip sạch vào Bin chuyên biệt (VD: `Bin: Clean_Scenes`).
+4. Xếp tuần tự lên Timeline Track V1, cắm Marker tại các điểm cao trào `climax_sec`.
+
+---
+
+## 📁 Cấu Trúc Thư Mục Chuẩn Của Clean Cut
+
+```
+<project_root>/
+├── <video_source>.mp4
+├── _scene/<video_stem>/             ← Cache phân tích & Vision sheets
+│   ├── cands.json                  ← Danh sách điểm cắt nghi vấn
+│   ├── dec.txt                     ← Phán quyết R/F/I của Agent Vision
+│   └── sheets/                     ← Ảnh lưới Contact Sheets (24 cuts/sheet)
+│       ├── sheet_01.jpg
+│       └── ...
+└── output_clean_cut/               ← Thư mục kết quả chính thức
+    ├── scenes/                     ← Các clip MP4 đã cắt sạch
+    │   ├── fail_001.mp4
+    │   └── ...
+    ├── thumbnails/                 ← Filmstrip 4-panel kiểm chứng
+    │   ├── fail_001_strip.jpg
+    │   └── ...
+    └── scenes_context.json         ← Manifest đầy đủ cho Premiere Pro MCP
+```
