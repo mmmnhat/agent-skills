@@ -417,6 +417,9 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         pbw = max(10, int(bw * scale_x))
         pbh = max(10, int(bh * scale_y))
         clean_crop_p = frame_proxy[pby:pby+pbh, pbx:pbx+pbw]
+        h_orig, h_flip = compute_dual_phash(clean_crop_p)
+        hist = get_hsv_hist(clean_crop_p)
+
         # Boundary frames for temporal continuity stitching
         head_fn = min(proxy_total_frames - 1, s_fn + 2)
         tail_fn = max(0, min(proxy_total_frames - 1, e_fn - 2))
