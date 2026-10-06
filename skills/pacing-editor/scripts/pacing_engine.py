@@ -42,52 +42,97 @@ def load_config():
 
 CONFIG = load_config()
 
+import math
+
 # --- 1. Multi-Criteria Scoring & Metrics ---
 
 def calculate_interest_score(clip):
     """
     Computes S(c) = 0.40 * M(c) + 0.35 * N(c) + 0.25 * A(c)
+    with continuous variance based on motion intensity, narrative arc,
+    action peak positioning, climax duration, audio dynamics, and duration sweet spot.
     """
     landmarks = clip.get("temporal_landmarks") or clip.get("motion_landmarks") or {}
+    ctx = clip.get("context") or {}
+    phases = landmarks.get("phases") or {}
+    pacing_rec = landmarks.get("pacing_recommendations") or {}
+    dur = float(clip.get("duration") or clip.get("duration_sec") or 3.0)
     
     # 1. Motion Score M(c) in [0, 100]
     motion_val = landmarks.get("peak_motion_diff")
     if motion_val is not None:
         m_score = min(100.0, (float(motion_val) / 45.0) * 100.0)
     else:
-        # Fallback based on phases count or action peak presence
-        phases = landmarks.get("phases", {})
-        if phases:
-            m_score = 80.0 if "climax" in phases else 65.0
-        else:
-            m_score = 70.0
-            
+        m_intensity = ctx.get("motion_intensity", "medium")
+        base_m = 85.0 if m_intensity == "high" else (70.0 if m_intensity == "medium" else 55.0)
+        
+        # Climax phase duration factor (optimal climax duration is ~2.2s)
+        climax_phase = phases.get("climax")
+        climax_dur = (climax_phase[1] - climax_phase[0]) if climax_phase else (dur * 0.4)
+        climax_ratio_factor = math.exp(-((climax_dur - 2.2) ** 2) / (2 * (1.2 ** 2)))
+        
+        # Action peak golden ratio positioning (~0.58 of clip)
+        peak_rel = float(landmarks.get("action_peak_rel_sec") or (dur * 0.55))
+        peak_pos_ratio = peak_rel / max(0.5, dur)
+        peak_pos_factor = math.exp(-((peak_pos_ratio - 0.58) ** 2) / (2 * (0.18 ** 2)))
+        
+        # Speed ramp contrast bonus
+        lead_speed = float(pacing_rec.get("suggested_speed_ramp", {}).get("lead_in_speed", 1.0))
+        speed_factor = 1.08 if lead_speed >= 2.5 else 1.0
+        
+        m_score = base_m * (0.60 + 0.25 * climax_ratio_factor + 0.15 * peak_pos_factor) * speed_factor
+        m_score = min(100.0, max(30.0, m_score))
+        
     # 2. Narrative Arc Score N(c) in [0, 100]
-    pacing_rec = landmarks.get("pacing_recommendations") or {}
-    arc_type = pacing_rec.get("narrative_arc", "complete_arc")
-    if arc_type == "complete_arc":
-        n_score = 100.0
-    elif "truncated_tail" in arc_type:
-        n_score = 85.0
-    elif "truncated_head" in arc_type:
-        n_score = 70.0
-    elif "incomplete" in arc_type or "fragment" in arc_type:
-        n_score = 50.0
+    arc_status = (
+        phases.get("narrative_arc", {}).get("status")
+        or ctx.get("narrative_arc", {}).get("status")
+        or pacing_rec.get("narrative_arc")
+        or "complete_narrative_arc"
+    )
+    if "complete" in arc_status:
+        n_base = 92.0
+    elif "truncated_tail" in arc_status:
+        # High curiosity and hook value (shocking unresolved cutoff)
+        n_base = 86.0
+    elif "truncated_head" in arc_status:
+        n_base = 68.0
+    elif "fragment" in arc_status:
+        n_base = 52.0
     else:
-        n_score = 85.0
+        n_base = 72.0
         
+    mood = ctx.get("mood", "")
+    mood_bonus = 4.0 if mood == "shocking_unresolved" else (2.0 if mood == "dramatic" else 0.0)
+    
+    # Emotional resolution presence
+    rec_phase = phases.get("recovery")
+    rec_bonus = 3.0 if (rec_phase and (rec_phase[1] - rec_phase[0]) >= 0.4) else 0.0
+    
+    n_score = min(100.0, max(30.0, n_base + mood_bonus + rec_bonus))
+    
     # 3. Audio Transient Score A(c) in [0, 100]
-    audio_info = clip.get("audio") or {}
-    snap_delta = abs(float(audio_info.get("start_snap_delta", 0.0)))
-    if snap_delta < 0.15:
-        a_score = 85.0
-    elif snap_delta < 0.30:
-        a_score = 75.0
+    audio_mood = ctx.get("audio", {}).get("sound_mood", "ambient")
+    a_base = 88.0 if audio_mood == "impactful_action" else 72.0
+    
+    peak_rel = float(landmarks.get("action_peak_rel_sec") or (dur * 0.55))
+    aud_peak = ctx.get("audio", {}).get("peak_impact_time_sec")
+    if aud_peak is not None:
+        delta = abs(float(aud_peak) - peak_rel)
+        align_factor = math.exp(-delta / 0.4)
     else:
-        a_score = 65.0
-        
-    score = round(0.40 * m_score + 0.35 * n_score + 0.25 * a_score, 2)
-    return score
+        align_factor = 0.80
+    a_score = a_base * (0.80 + 0.20 * align_factor)
+    
+    snap_delta = abs(float(clip.get("audio", {}).get("start_snap_delta", 0.0)))
+    if snap_delta < 0.15:
+        a_score += 2.0
+    a_score = min(100.0, max(30.0, a_score))
+    
+    # 4. Duration Sweet Spot Modulation (Clips between 3.0s and 6.5s have optimal retention)
+    dur_factor = math.exp(-((dur - 4.5) ** 2) / (2 * (2.5 ** 2)))
+    final_score = (0.40 * m_score + 0.35 * n_score + 0.25 * a_score) * (0.92 + 0.08 * dur_factor)
+    return round(final_score, 3)
 
 def bundle_incidents(scenes):
     """
@@ -129,7 +174,7 @@ def bundle_incidents(scenes):
         scores = b["scores"]
         max_s = max(scores) if scores else 70.0
         residual_sum = sum(s for s in scores if s != max_s)
-        b["bundle_score"] = round(max_s + 0.10 * residual_sum, 2)
+        b["bundle_score"] = round(max_s + 0.10 * residual_sum, 3)
         
         # Estimate fast cut duration for the bundle
         fc_dur = 0.0
@@ -182,9 +227,9 @@ def map_w_curve(bundles, target_duration=None):
     """
     Organizes incident bundles into a psychological W-Curve:
     Slot 1: Hook (Peak 1 - Rank 2)
-    Slot 2: Valley 1 (Context / Dip 1)
+    Slot 2: Valley 1 (Context / Rising Curiosity - Dip to Rise)
     Slot 3: Mid-Peak (Peak 2 - Rank 3)
-    Slot 4: Valley 2 (Suspense / Dip 2)
+    Slot 4: Valley 2 (Suspense / Rising Build-up - Dip to Rise)
     Slot 5: Grand Finale (Peak 3 - Rank 1 Ultimate Climax)
     """
     # 1. Target Duration Fitting
@@ -208,23 +253,24 @@ def map_w_curve(bundles, target_duration=None):
         
     n = len(working_bundles)
     if n <= 2:
-        # Simple descending or as-is
         return sorted(working_bundles, key=lambda b: b["bundle_score"], reverse=True)
         
     # Rank bundles by score descending
     ranked = sorted(working_bundles, key=lambda b: b["bundle_score"], reverse=True)
     
-    # Map into W-Curve slots:
-    # Ranked index: 0 = #1, 1 = #2, 2 = #3, 3 = #4, ...
-    rank_1 = ranked[0]  # Grand Finale
-    rank_2 = ranked[1]  # Hook (Peak 1)
-    rank_3 = ranked[2] if n >= 3 else None  # Mid-Peak (Peak 2)
+    rank_1 = ranked[0]  # Grand Finale (Peak 3 - Rank 1 Ultimate Climax)
+    rank_2 = ranked[1]  # Hook (Peak 1 - Rank 2 High Energy Opener)
+    rank_3 = ranked[2] if n >= 3 else None  # Mid-Peak (Peak 2 - Rank 3 Midpoint Tension Spike)
     
     remaining = ranked[3:] if n >= 4 else []
-    # Split remaining into Valley 1 and Valley 2
     half = len(remaining) // 2
-    valley_1 = remaining[:half] if half > 0 else (remaining[:1] if remaining else [])
-    valley_2 = remaining[half:] if half > 0 else (remaining[1:] if len(remaining) > 1 else [])
+    v1_raw = remaining[:half] if half > 0 else (remaining[:1] if remaining else [])
+    v2_raw = remaining[half:] if half > 0 else (remaining[1:] if len(remaining) > 1 else [])
+    
+    # In Valley 1: sort by ascending score so energy dips after Hook and builds up towards Mid-Peak
+    valley_1 = sorted(v1_raw, key=lambda b: b["bundle_score"])
+    # In Valley 2: sort by ascending score so energy dips after Mid-Peak and builds up towards Grand Finale
+    valley_2 = sorted(v2_raw, key=lambda b: b["bundle_score"])
     
     w_curve_ordered = []
     

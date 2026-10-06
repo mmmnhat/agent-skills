@@ -15,7 +15,9 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Try to import search_engine from asset-indexer
-ASSET_INDEXER_DIR = Path(r"E:\.agents\skills\asset-indexer\scripts")
+ASSET_INDEXER_DIR = Path(__file__).resolve().parent.parent.parent / "asset-indexer" / "scripts"
+if not ASSET_INDEXER_DIR.exists():
+    ASSET_INDEXER_DIR = Path(r"E:\.agents\skills\asset-indexer\scripts")
 if str(ASSET_INDEXER_DIR) not in sys.path:
     sys.path.append(str(ASSET_INDEXER_DIR))
 
