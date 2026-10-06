@@ -417,9 +417,19 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         pbw = max(10, int(bw * scale_x))
         pbh = max(10, int(bh * scale_y))
         clean_crop_p = frame_proxy[pby:pby+pbh, pbx:pbx+pbw]
-        
-        h_orig, h_flip = compute_dual_phash(clean_crop_p)
-        hist = get_hsv_hist(clean_crop_p)
+        # Boundary frames for temporal continuity stitching
+        head_fn = min(proxy_total_frames - 1, s_fn + 2)
+        tail_fn = max(0, min(proxy_total_frames - 1, e_fn - 2))
+        cap.set(cv2.CAP_PROP_POS_FRAMES, head_fn)
+        ret_h, frame_head = cap.read()
+        cap.set(cv2.CAP_PROP_POS_FRAMES, tail_fn)
+        ret_t, frame_tail = cap.read()
+
+        head_crop = frame_head[pby:pby+pbh, pbx:pbx+pbw] if (ret_h and frame_head is not None) else clean_crop_p
+        tail_crop = frame_tail[pby:pby+pbh, pbx:pbx+pbw] if (ret_t and frame_tail is not None) else clean_crop_p
+
+        head_hist = get_hsv_hist(head_crop)
+        tail_hist = get_hsv_hist(tail_crop)
         
         shots.append({
             "raw_start": s_sec,
@@ -428,7 +438,11 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             "raw_end_fn": e_fn,
             "dur": dur,
             "mid_frame": cv2.resize(frame_proxy, (320, 180)),
+            "head_frame": cv2.resize(frame_head, (320, 180)) if (ret_h and frame_head is not None) else None,
+            "tail_frame": cv2.resize(frame_tail, (320, 180)) if (ret_t and frame_tail is not None) else None,
             "hist": hist,
+            "head_hist": head_hist,
+            "tail_hist": tail_hist,
             "hash_orig": h_orig,
             "hash_flip": h_flip,
             "has_blur": has_blur,
@@ -452,18 +466,35 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             continue
             
         prev = incidents[-1]
-        corr = float(cv2.compareHist(prev["hist"], s["hist"], cv2.HISTCMP_CORREL)) if (prev["hist"] is not None and s["hist"] is not None) else 0.0
-        is_same_incident = (corr >= 0.65)
-        if not is_same_incident and (corr >= 0.30):
-            inl = get_geometric_inliers(prev.get("mid_frame"), s.get("mid_frame"))
-            if inl >= 14:
-                is_same_incident = True
-        
-        if is_same_incident:
+
+        # A. Boundary continuity (tail of prev vs head of current shot)
+        boundary_corr = 0.0
+        if prev.get("tail_hist") is not None and s.get("head_hist") is not None:
+            boundary_corr = float(cv2.compareHist(prev["tail_hist"], s["head_hist"], cv2.HISTCMP_CORREL))
+
+        mid_corr = 0.0
+        if prev.get("hist") is not None and s.get("hist") is not None:
+            mid_corr = float(cv2.compareHist(prev["hist"], s["hist"], cv2.HISTCMP_CORREL))
+
+        is_hard_stitch = False
+        is_linked_reframe = False
+
+        # Case 1: Hard Stitch (Single action false split by flash, rapid motion blur, or lighting change)
+        if (boundary_corr >= 0.58) or (mid_corr >= 0.62 and prev["aspect_ratio"] == s["aspect_ratio"]):
+            is_hard_stitch = True
+        elif (boundary_corr >= 0.35 or mid_corr >= 0.35) and prev["aspect_ratio"] == s["aspect_ratio"]:
+            inl = get_geometric_inliers(prev.get("tail_frame", prev.get("mid_frame")), s.get("head_frame", s.get("mid_frame")))
+            if inl >= 10:
+                is_hard_stitch = True
+
+        if is_hard_stitch:
+            # Merge seamlessly into prev shot so the action stays unbroken
             prev["raw_end"] = s["raw_end"]
             prev["raw_end_fn"] = s["raw_end_fn"]
             prev["dur"] = round(prev["raw_end"] - prev["raw_start"], 2)
             prev["hist"] = s["hist"]
+            prev["tail_hist"] = s["tail_hist"]
+            prev["tail_frame"] = s.get("tail_frame")
             prev["mid_frame"] = s["mid_frame"]
             if prev["has_blur"] or s["has_blur"]:
                 prev["has_blur"] = True
@@ -489,14 +520,36 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
                 else:
                     prev["aspect_ratio"] = "16:9"
             continue
-        else:
-            current_incident_id += 1
-            s["incident_id"] = current_incident_id
-            s["shot_index"] = 1
-            s["is_continuation"] = False
-            s["continuation_of"] = None
-            s["variation_type"] = "base"
+
+        # Case 2: Multi-shot Incident Linking (Different angle, zoom reframe, or replay of the SAME incident)
+        is_hash_match, dist, sim, is_flipped = match_hashes(
+            prev["hash_orig"], s["hash_orig"], s["hash_flip"], max_dist=12
+        )
+        if is_hash_match or (mid_corr >= 0.40 and s["aspect_ratio"] != prev["aspect_ratio"]):
+            is_linked_reframe = True
+        elif mid_corr >= 0.35:
+            inl = get_geometric_inliers(prev.get("mid_frame"), s.get("mid_frame"))
+            if inl >= 12:
+                is_linked_reframe = True
+
+        if is_linked_reframe:
+            # Separate file, but grouped under the same incident_id
+            s["incident_id"] = prev["incident_id"]
+            s["shot_index"] = prev["shot_index"] + 1
+            s["is_continuation"] = True
+            s["continuation_of"] = prev["incident_id"]
+            s["variation_type"] = "reframe" if s["aspect_ratio"] != prev["aspect_ratio"] else "angle_b"
             incidents.append(s)
+            continue
+
+        # Case 3: Completely new independent incident
+        current_incident_id += 1
+        s["incident_id"] = current_incident_id
+        s["shot_index"] = 1
+        s["is_continuation"] = False
+        s["continuation_of"] = None
+        s["variation_type"] = "base"
+        incidents.append(s)
 
     if limit and limit > 0:
         incidents = incidents[:limit]
