@@ -32,12 +32,14 @@ try:
     from phash_utils import compute_dual_phash, match_hashes
     from temporal_analyzer import analyze_and_generate_filmstrip
     from scene_context_engine import synthesize_scene_context
+    from candidate_analyzer import analyze_video
 except ImportError:
     from .unblur_detector import detect_unblur_box
     from .audio_snapper import load_audio_buffer, snap_audio_cut_in_ram
     from .phash_utils import compute_dual_phash, match_hashes
     from .temporal_analyzer import analyze_and_generate_filmstrip
     from .scene_context_engine import synthesize_scene_context
+    from .candidate_analyzer import analyze_video
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
@@ -240,7 +242,14 @@ def generate_fast_proxy(video_path, proxy_path, height=240):
         print(f"  ! Warning: Hardware proxy failed ({e}), falling back to master video.")
         return str(video_path)
 
-def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_duration=None, unblur=None, limit=None, decisions=None, segments=None):
+def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_duration=None, unblur=None, limit=None, decisions=None, segments=None, work_dir=None, redo=False, analyze_only=False, overwrite=False):
+    real_video = resolve_video_input(video_path)
+    video_stem = Path(real_video).stem
+    w_dir = work_dir or os.path.join(os.path.dirname(real_video), "_scene", video_stem)
+
+    if analyze_only:
+        return analyze_video(real_video, work_dir=w_dir, redo=redo)
+
     cfg = load_config()
     out_dir = output_dir or cfg.get("output_dir", "output_clean_cut")
     pfx = prefix if prefix is not None else cfg.get("prefix", "scene_")
@@ -301,12 +310,12 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         os.makedirs(dup_dir, exist_ok=True)
         os.makedirs(cross_dup_dir, exist_ok=True)
 
-    real_video = resolve_video_input(video_path)
-    video_stem = Path(real_video).stem
-    
     if not os.path.exists(real_video):
         raise FileNotFoundError(f"Video file not found: {real_video}")
         
+    if decisions is None and os.path.exists(os.path.join(w_dir, "dec.txt")):
+        decisions = os.path.join(w_dir, "dec.txt")
+
     encoder = get_best_encoder(cfg.get("encoder", "auto"))
     print(f"\n[Clean-Cut Milestone 1] Initializing & Fast-Proxy Scanning: '{real_video}'")
     print(f"  • Hardware Encoder: {encoder}")
@@ -343,6 +352,8 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
     elif decisions and os.path.exists(decisions):
         print(f"  • Parsing vision-verified decisions from: {decisions}")
         cands_path = os.path.join(os.path.dirname(decisions), "cands.json")
+        if not os.path.exists(cands_path):
+            cands_path = os.path.join(w_dir, "cands.json")
         if not os.path.exists(cands_path):
             cands_path = os.path.join("_scene", video_stem, "cands.json")
         if os.path.exists(cands_path):
@@ -815,7 +826,8 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         cmd.extend([
             "-ss", f"{safe_start:.3f}",
             "-t", f"{safe_dur:.3f}",
-            "-i", real_video
+            "-i", real_video,
+            "-frames:v", str(item["total_frames"])
         ])
         
         if filters:
@@ -1001,6 +1013,10 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--interactive", action="store_true", help="Run interactive configuration menu")
     parser.add_argument("--decisions", default=None, help="Path to dec.txt containing vision-verified decisions")
     parser.add_argument("--segments", default=None, help="Path to segments.json containing verified scene segments")
+    parser.add_argument("--analyze-only", action="store_true", help="Run Stage 1 candidate cut analysis and contact sheet generation only")
+    parser.add_argument("--work-dir", default=None, help="Working directory for analysis cache and contact sheets")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files in output directory")
+    parser.add_argument("--redo", action="store_true", help="Force re-analyzing video even if cache exists")
     
     args = parser.parse_args()
     
@@ -1015,7 +1031,11 @@ if __name__ == "__main__":
             unblur=unblur_val,
             limit=lim_val,
             decisions=args.decisions,
-            segments=args.segments
+            segments=args.segments,
+            work_dir=args.work_dir,
+            redo=args.redo,
+            analyze_only=args.analyze_only,
+            overwrite=args.overwrite
         )
     else:
         run_clean_cut(
@@ -1027,5 +1047,9 @@ if __name__ == "__main__":
             unblur=not args.no_unblur,
             limit=args.limit,
             decisions=args.decisions,
-            segments=args.segments
+            segments=args.segments,
+            work_dir=args.work_dir,
+            redo=args.redo,
+            analyze_only=args.analyze_only,
+            overwrite=args.overwrite
         )
