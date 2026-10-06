@@ -115,23 +115,20 @@ Sau khi hoàn tất bóc tách cảnh:
 
 ---
 
-## 📁 Cấu Trúc Thư Mục Chuẩn Của Clean Cut
+## 📁 Cấu Trúc Thư Mục Chuẩn Của Clean Cut (Lean & Gọn Gàng)
+
+Tất cả tài nguyên phân tích và kết quả được gom trọn vào **1 thư mục duy nhất** (`output_clean_cut/` hoặc thư mục chỉ định qua `--output-dir`), xóa bỏ hoàn toàn các folder trung gian rác:
 
 ```
-<project_root>/
-├── <video_source>.mp4
-├── _scene/<video_stem>/             ← Cache phân tích & Vision sheets
-│   ├── cands.json                  ← Danh sách điểm cắt nghi vấn
-│   ├── dec.txt                     ← Phán quyết R/F/I của Agent Vision
-│   └── sheets/                     ← Ảnh lưới Contact Sheets (24 cuts/sheet)
-│       ├── sheet_01.jpg
-│       └── ...
-└── output_clean_cut/               ← Thư mục kết quả chính thức
-    ├── scenes/                     ← Các clip MP4 đã cắt sạch
-    │   ├── fail_001.mp4
-    │   └── ...
-    ├── thumbnails/                 ← Filmstrip 4-panel kiểm chứng
-    │   ├── fail_001_strip.jpg
-    │   └── ...
-    └── scenes_context.json         ← Manifest đầy đủ cho Premiere Pro MCP
+output_clean_cut/
+├── cands.json                  ← Danh sách điểm cắt nghi vấn (Stage 1)
+├── dec.txt                     ← Phán quyết R/F/I của Agent Vision (Stage 2)
+├── sheets/                     ← Ảnh lưới Contact Sheets kiểm duyệt (24 cuts/sheet)
+├── scenes/                     ← Các clip MP4 đã cắt sạch (Stage 3)
+│   ├── fail_001.mp4
+│   └── ...
+├── thumbnails/                 ← Filmstrip 4-panel kiểm chứng (Stage 4)
+│   ├── fail_001_strip.jpg
+│   └── ...
+└── scenes_context.json         ← Manifest đầy đủ cho Premiere Pro MCP
 ```

@@ -149,6 +149,7 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
 
     cfg = load_config()
     out_dir = output_dir or cfg.get("output_dir", "output_clean_cut")
+    w_dir = work_dir or out_dir
     pfx = prefix if prefix is not None else cfg.get("prefix", "scene_")
     det_thresh = threshold if threshold is not None else cfg.get("detector_threshold", 27.0)
     min_dur = min_duration if min_duration is not None else cfg.get("min_scene_duration_sec", 1.2)
@@ -169,49 +170,34 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
     cfg["unblur_enabled"] = do_unblur
     save_config(cfg)
     
-    # Clean previous run clips, thumbnails, duplicates, and manifests (preserving proxy cache)
-    if os.path.exists(out_dir):
-        for sub in ["scenes", "thumbnails", "manifests", "duplicates", "exports"]:
-            sub_p = os.path.join(out_dir, sub)
-            if os.path.exists(sub_p):
-                try:
-                    shutil.rmtree(sub_p)
-                except Exception:
-                    pass
-        for fname in os.listdir(out_dir):
-            fpath = os.path.join(out_dir, fname)
-            if fname.endswith("_proxy240p.mp4") or fname == "cache":
-                continue
-            if os.path.isfile(fpath):
-                try:
-                    os.remove(fpath)
-                except Exception:
-                    pass
-        print(f"  🧹 Cleaned previous run artifacts in '{out_dir}'.")
-
-    os.makedirs(out_dir, exist_ok=True)
-    scenes_dir = os.path.join(out_dir, "scenes")
-    os.makedirs(scenes_dir, exist_ok=True)
-    thumb_dir = os.path.join(out_dir, "thumbnails")
-    os.makedirs(thumb_dir, exist_ok=True)
-    manifest_dir = os.path.join(out_dir, "manifests")
-    os.makedirs(manifest_dir, exist_ok=True)
-    cache_dir = os.path.join(out_dir, "cache")
-    os.makedirs(cache_dir, exist_ok=True)
-    exports_dir = os.path.join(out_dir, "exports")
-    os.makedirs(exports_dir, exist_ok=True)
-    
-    dup_dir = os.path.join(out_dir, "duplicates", "intra")
-    cross_dup_dir = os.path.join(out_dir, "duplicates", "cross")
-    if move_duplicates:
-        os.makedirs(dup_dir, exist_ok=True)
-        os.makedirs(cross_dup_dir, exist_ok=True)
-
     if not os.path.exists(real_video):
         raise FileNotFoundError(f"Video file not found: {real_video}")
+
+    # Clean previous run clips and thumbnails only if overwrite is requested
+    if os.path.exists(out_dir) and overwrite:
+        for sub in ["scenes", "thumbnails", "duplicates"]:
+            sub_p = os.path.join(out_dir, sub)
+            if os.path.exists(sub_p):
+                shutil.rmtree(sub_p, ignore_errors=True)
+        m_file = os.path.join(out_dir, "scenes_context.json")
+        if os.path.exists(m_file):
+            try: os.remove(m_file)
+            except OSError: pass
+
+    scenes_dir = os.path.join(out_dir, "scenes")
+    thumb_dir = os.path.join(out_dir, "thumbnails")
+    os.makedirs(scenes_dir, exist_ok=True)
+    os.makedirs(thumb_dir, exist_ok=True)
         
-    if decisions is None and os.path.exists(os.path.join(w_dir, "dec.txt")):
-        decisions = os.path.join(w_dir, "dec.txt")
+    if decisions is None:
+        for cand_dec in [
+            os.path.join(out_dir, "dec.txt"),
+            os.path.join(w_dir, "dec.txt"),
+            os.path.join("_scene", video_stem, "dec.txt")
+        ]:
+            if os.path.exists(cand_dec):
+                decisions = cand_dec
+                break
 
     encoder = get_best_encoder(cfg.get("encoder", "auto"))
     print(f"\n[Clean-Cut Milestone 1] Initializing & Frame Scanning: '{real_video}'")
@@ -601,12 +587,10 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         file_name = f"{pfx}{idx:03d}.mp4"
         stem = f"{pfx}{idx:03d}"
         
-        if is_intra_dup and move_duplicates:
-            target_dir = dup_dir
-            folder_tag = "duplicates/intra"
-        elif is_cross_dup and move_duplicates:
-            target_dir = cross_dup_dir
-            folder_tag = "duplicates/cross"
+        if (is_intra_dup or is_cross_dup) and move_duplicates:
+            target_dir = os.path.join(out_dir, "duplicates")
+            os.makedirs(target_dir, exist_ok=True)
+            folder_tag = "duplicates"
         else:
             target_dir = scenes_dir
             folder_tag = "scenes"
@@ -819,19 +803,12 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             return o.tolist()
         return str(o)
 
-    manifest_path = os.path.join(manifest_dir, "scenes_context.json")
+    manifest_path = os.path.join(out_dir, "scenes_context.json")
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(context_manifest, f, indent=2, ensure_ascii=False, default=json_default)
         
-    # Also mirror at root of out_dir for quick CLI access
-    root_manifest = os.path.join(out_dir, "scenes_context.json")
-    try:
-        shutil.copy2(manifest_path, root_manifest)
-    except Exception:
-        pass
-        
     print(f"\n[Clean-Cut Execution Succeeded]")
-    print(f"  ✓ Context manifest ready at: {manifest_path} (mirrored to root)")
+    print(f"  ✓ Context manifest ready at: {manifest_path}")
     print(f"  ✓ Clean footage saved in: {scenes_dir}")
     print(f"  ✓ Visual filmstrips saved in: {thumb_dir}")
 
