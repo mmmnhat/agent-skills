@@ -15,49 +15,64 @@ It integrates seamlessly with:
 
 ---
 
-## Multi-Track Architecture
+## Multi-Track Studio Architecture (5-Track Layout)
 
 ```
-Timeline Layout:
---------------------------------------------------------------------------------------
-[V2]  (Optional) Meme Overlays / Shield Adjustment Layers / Zoom Motion
-[V1]  [Scene 01 (1.0x -> 0.5x Optical Flow -> 1.5x)] [Scene 02] [Scene 03] ...
---------------------------------------------------------------------------------------
-[A1]  [Original Ambient / Voiceover Audio Track]
-[A2]  |Whoosh|   *Impact Hit*   |Whoosh|   *Bonk Hit*   |Whoosh|
-[A3]  [-------------------- Background Music (Ducked BGM) ---------------------------]
---------------------------------------------------------------------------------------
+Premiere Pro Timeline Layout:
+===================================================================================================
+[V1] Video Track       : Fast-cut video clips with action peaks aligned
+---------------------------------------------------------------------------------------------------
+[A1] Audio Track 1     : Original Video Clip Audio (Ambient sound / dialogue / physical impact)
+[A2] Audio Track 2     : [BLANK] RESERVED EXCLUSIVELY FOR VOICEOVER (VO / Narration)
+[A3] Audio Track 3     : Transition SFX (Whoosh / Swoosh synced to video cuts)
+[A4] Audio Track 4     : Climax SFX (Punch / Boom / Thud synced to Action Peak Markers)
+[A5] Audio Track 5     : Background Music (BGM - Automatic Ducking -12dB during Climax events)
+===================================================================================================
 ```
 
 ---
 
-## Speed Ramping & Retention Curve
+## Operating Modes
 
-For each scene:
-- **Lead-In (Hook)**: Runs at $1.0\times$ (or snappy $1.1\times$) to establish the scene without wasting viewer time.
-- **Action Peak (Climax)**: Ramps down to $0.5\times$ slow-motion with **Optical Flow** (`interpolation_type: 2`) for dramatic visual tension.
-- **Recovery / Outro**: Speeds up to $1.5\times$ to eliminate dead air before the next cut.
-- **Climax Marker**: Places a timeline marker exactly at the impact peak and syncs an impact sound effect on track `A2`.
+1. **Sequential Mode (`--mode sequential`)**:
+   - Preserves 100% of the input clip sequence (chronological / folder order).
+   - Applies **Hard Fast-Cut** trimming via Premiere Pro In/Out points, eliminating sluggish lead-ins and trailing dead air.
+
+2. **W-Curve Reordering Mode (`--mode w-curve`)**:
+   - Scores clips using: $\text{Score} = 0.40 \cdot \text{Motion} + 0.35 \cdot \text{Arc} + 0.25 \cdot \text{Audio}$.
+   - Preserves **Incident Bundles** (multi-shot clips stay connected).
+   - Maps into psychological W-curve:
+     - **Hook (Peak 1)**: Rank 2 incident (or signature opening).
+     - **Valley 1 (Dip 1)**: Context & curiosity.
+     - **Mid-Peak (Peak 2)**: Rank 3 incident.
+     - **Valley 2 (Dip 2)**: Suspense build-up.
+     - **Grand Finale (Peak 3)**: Rank 1 incident (maximum impact payoff).
+   - Optional `--target-duration` (e.g., `-t 30` or `-t 60`) selects top incident bundles to fit the duration.
+
+See full engineering specification in [`references/SPEC_AND_PLAN.md`](references/SPEC_AND_PLAN.md).
 
 ---
 
 ## Quickstart & CLI Reference
 
-### 1. Generate Pacing Blueprint & Premiere Pro MCP Plan
+### 1. Sequential Fast-Cut Assembly (Default)
 ```bash
 python e:\.agents\skills\pacing-editor\scripts\pacing_cli.py \
-  --scenes-json "E:\test-dung-ai\output_clean_cut_18\scenes_context.json" \
-  --name "Dailycam_Reels_Master" \
-  --platform reels_shorts \
+  --scenes-json "E:\test-dung-ai\test_skills_run\inspected\scenes_context.json" \
+  --name "Sequential_Master" \
+  --mode sequential \
   --premiere-plan
 ```
-*Outputs:*
-- `Dailycam_Reels_Master_manifest.json` (Structured timeline tracks)
-- `Dailycam_Reels_Master_premiere_mcp_plan.json` (Executable MCP tool calls)
 
-### 2. Render Instant Stitched Video (Headless NVENC)
+### 2. W-Curve Dynamic Reordering (Target 30s)
 ```bash
 python e:\.agents\skills\pacing-editor\scripts\pacing_cli.py \
+  --scenes-json "E:\test-dung-ai\test_skills_run\inspected\scenes_context.json" \
+  --name "W_Curve_Master" \
+  --mode w-curve \
+  --target-duration 30 \
+  --premiere-plan
+```
   --scenes-json "E:\test-dung-ai\output_clean_cut_18\scenes_context.json" \
   --name "Dailycam_Preview" \
   --render
