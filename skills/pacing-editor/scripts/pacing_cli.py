@@ -47,39 +47,75 @@ def interactive_setup():
         src_in = input("📋 Nhập lại đường dẫn: ").strip().strip('"').strip("'")
         source = src_in
         
-    # 2. Sequence Name
-    name_in = input("🎬 Tên Sequence Premiere [W_Curve_Master]: ").strip()
-    name = name_in if name_in else "W_Curve_Master"
+    # 2. Sequence Mode
+    print("\n🎬 Tuỳ chọn Sequence Premiere:")
+    print("   1. active    : Dùng sequence đang mở sẵn trong Premiere (Mặc định)")
+    print("   2. new_clone : Tạo sequence mới sạch (Clone từ sequence hiện có - Khuyên dùng)")
+    print("   3. preset    : Tạo sequence theo Preset chuẩn (.sqpreset)")
+    seq_opt = input("   Lựa chọn [1/2/3, mặc định 1]: ").strip()
     
-    # 3. Pacing Mode
-    print("🎯 Chế độ dựng:")
-    print("   1. w-curve    : Đảo cảnh nhịp tâm lý W-Curve (Khuyên dùng)")
+    seq_mode_prem = "active"
+    preset_path = None
+    if seq_opt == "2":
+        seq_mode_prem = "new_clone"
+        name_in = input("🎬 Tên Sequence mới [W_Curve_Master]: ").strip()
+        name = name_in if name_in else "W_Curve_Master"
+    elif seq_opt == "3":
+        seq_mode_prem = "preset"
+        name_in = input("🎬 Tên Sequence [W_Curve_Master]: ").strip()
+        name = name_in if name_in else "W_Curve_Master"
+        print("   Chọn preset:")
+        print("     1. HD 1080p 59.94 fps (Khuyên dùng cho Reels/Shorts/Action)")
+        print("     2. HD 1080p 29.97 fps")
+        print("     3. Đường dẫn custom .sqpreset")
+        p_opt = input("     Lựa chọn [1/2/3, mặc định 1]: ").strip()
+        if p_opt == "2":
+            preset_path = "/Applications/Adobe Premiere Pro 2025/Adobe Premiere Pro 2025.app/Contents/Settings/SequencePresets/HD 1080p/HD 1080p 29.97 fps.sqpreset"
+        elif p_opt == "3":
+            preset_path = input("     Nhập đường dẫn .sqpreset: ").strip().strip('"').strip("'")
+        else:
+            preset_path = "/Applications/Adobe Premiere Pro 2025/Adobe Premiere Pro 2025.app/Contents/Settings/SequencePresets/HD 1080p/HD 1080p 59.94 fps.sqpreset"
+    else:
+        seq_mode_prem = "active"
+        name_in = input("🎬 Tên Sequence hiển thị [Active_Sequence]: ").strip()
+        name = name_in if name_in else "Active_Sequence"
+
+    # 3. Dedicated Footage Bin
+    bin_in = input("\n📁 Tên Bin lưu trữ footage trong Premiere [Scenes]: ").strip()
+    bin_name = bin_in if bin_in else "Scenes"
+
+    # 4. Pacing Narrative Mode
+    print("\n🎯 Chế độ dựng nhịp (Pacing Mode):")
+    print("   1. w-curve    : Đảo cảnh nhịp tâm lý W-Curve (Hook -> Context -> Climax -> Ending)")
     print("   2. sequential : Giữ nguyên thứ tự thời gian gốc")
     mode_in = input("   Lựa chọn [1/2, mặc định 1]: ").strip()
     mode = "sequential" if mode_in == "2" else "w-curve"
     
-    # 4. Target Duration
-    dur_in = input("⏱️ Thời lượng mục tiêu (giây, VD: 30, 45, 60. Enter để lấy hết): ").strip()
+    # 5. Target Duration
+    dur_in = input("\n⏱️ Thời lượng mục tiêu (giây, VD: 30, 45, 60. Enter để lấy hết): ").strip()
     try:
         target_dur = float(dur_in) if dur_in else None
     except ValueError:
         target_dur = None
         
-    # 5. Output options
-    plan_in = input("🚀 Sinh Premiere Pro MCP Plan? [Y/n]: ").strip().lower()
+    # 6. Output options
+    plan_in = input("\n🚀 Sinh Premiere Pro MCP Plan? [Y/n]: ").strip().lower()
     prem_plan = (plan_in not in ["n", "no"])
     
     render_in = input("🎥 Render luôn master video qua FFmpeg? [y/N]: ").strip().lower()
     do_render = (render_in in ["y", "yes"])
     
     print("=======================================================\n")
-    return source, name, mode, target_dur, prem_plan, do_render
+    return source, name, seq_mode_prem, preset_path, bin_name, mode, target_dur, prem_plan, do_render
 
 def main():
     parser = argparse.ArgumentParser(description="Pacing-Editor: High-Retention Sequencing & Sound Design Engine (v2.0)")
     parser.add_argument("--scenes-json", "-s", help="Path to scenes_context.json from clean-cut / clip-inspector")
     parser.add_argument("--input-dir", "-d", help="Directory of video clips to assemble")
     parser.add_argument("--name", default="Pacing_Master_Sequence", help="Target Sequence Name")
+    parser.add_argument("--seq-mode", default="active", choices=["active", "new_clone", "preset"], help="Sequence creation strategy: active, new_clone, or preset")
+    parser.add_argument("--preset-path", default=None, help="Path to installed Premiere .sqpreset (for --seq-mode preset)")
+    parser.add_argument("--bin-name", default="Scenes", help="Destination bin name for imported footage inside Premiere")
     parser.add_argument("--interactive", "-i", action="store_true", help="Launch interactive configuration wizard")
     parser.add_argument("--platform", default="reels_shorts", choices=["reels_shorts", "landscape_youtube"], help="Target export platform")
     parser.add_argument("--mode", default="sequential", choices=["sequential", "w-curve"], help="Sequencing mode: sequential (chronological) or w-curve (narrative retention)")
@@ -99,9 +135,12 @@ def main():
     seq_target_dur = args.target_duration
     seq_prem_plan = args.premiere_plan
     seq_render = args.render
+    seq_mode_prem = args.seq_mode
+    preset_path = args.preset_path
+    bin_name = args.bin_name
 
     if not input_source or args.interactive:
-        input_source, seq_name, seq_mode, seq_target_dur, seq_prem_plan, seq_render = interactive_setup()
+        input_source, seq_name, seq_mode_prem, preset_path, bin_name, seq_mode, seq_target_dur, seq_prem_plan, seq_render = interactive_setup()
 
     print(f"\n=======================================================")
     print(f"🎬 [Pacing-Editor v2.0] Mode: '{seq_mode.upper()}' | Trimming: '{args.cut_mode.upper()}'")
@@ -152,7 +191,13 @@ def main():
             print(f"  • [{role:22s}] {sc['clip_id']} ({dur}s | Score: {score}) -> {Path(sc['file_path']).name}")
 
     if seq_prem_plan or not seq_render:
-        actions = generate_premiere_mcp_actions(manifest)
+        actions = generate_premiere_mcp_actions(
+            pacing_manifest=manifest,
+            sequence_mode=seq_mode_prem,
+            sequence_name=seq_name,
+            preset_path=preset_path,
+            bin_name=bin_name
+        )
         plan_file = manifest_file.with_name(f"{manifest_file.stem}_premiere_mcp_plan.json")
         with open(plan_file, "w", encoding="utf-8") as f:
             json.dump(actions, f, indent=2, ensure_ascii=False)

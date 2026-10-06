@@ -32,16 +32,22 @@ def get_best_render_encoder():
         pass
     return "libx264"
 
-def generate_premiere_mcp_actions(pacing_manifest, sequence_id=None):
+def generate_premiere_mcp_actions(pacing_manifest, sequence_mode="active", sequence_name=None, sequence_id=None, preset_path=None, bin_name="Scenes"):
     """
     Generates an optimized, high-performance batch list of Premiere Pro MCP calls (~100x faster).
-    Collapses 60+ individual file round-trips into atomic batch operations:
-      - Phase 1: Import unique media files required for sequence
-      - Phase 2: Single atomic add_to_timeline_batch for Video (V1) + Linked Audio (A1)
-      - Phase 3: Single atomic add_to_timeline_batch for Audio design (A3 Whoosh, A4 Climax, A5 BGM)
-      - Phase 4: Climax action peak markers (top peaks only)
+    Enforces strict folder and bin organization:
+      - Phase 1: Create dedicated footage bin (e.g. "Scenes")
+      - Phase 2: Import unique media files directly with binName
+      - Phase 3: Atomic move_items_to_bin to guarantee 100% of footage is cleanly inside the bin (none in root)
+      - Phase 4: Sequence setup:
+          * 'active'    : Use active sequence directly
+          * 'new_clone' : Duplicate active sequence with clearContents=true and new name
+          * 'preset'    : Create sequence from .sqpreset
+      - Phase 5: Single atomic add_to_timeline_batch for Video (V1) + Linked Audio (A1)
+      - Phase 6: Single atomic add_to_timeline_batch for Audio design (A3 Whoosh, A4 Climax, A5 BGM)
+      - Phase 7: Climax action peak markers (top 5 peaks only)
     """
-    seq_name = pacing_manifest.get("sequence_name", "W_Curve_Master")
+    target_seq = sequence_name or pacing_manifest.get("sequence_name", "W_Curve_Master")
     v1_clips = pacing_manifest.get("tracks", {}).get("V1", [])
     a3_sfx = pacing_manifest.get("tracks", {}).get("A3", [])
     a4_sfx = pacing_manifest.get("tracks", {}).get("A4", [])
@@ -56,17 +62,65 @@ def generate_premiere_mcp_actions(pacing_manifest, sequence_id=None):
 
     actions = []
 
-    # 1. Import media files
+    # 1. Create dedicated Bin
+    bin_target = bin_name or "Scenes"
+    actions.append({
+        "step": len(actions) + 1,
+        "tool": "create_bin",
+        "arguments": {
+            "name": bin_target
+        }
+    })
+
+    # 2. Import media files targeted to that bin
     for f in sorted(needed_files):
         actions.append({
             "step": len(actions) + 1,
             "tool": "import_media",
             "arguments": {
-                "filePath": f
+                "filePath": f,
+                "binName": bin_target
             }
         })
 
-    # 2. Batch Video V1 + Auto-linked Audio A1
+    # 3. Enforce move_items_to_bin so NO clips are left at project root
+    item_names = [Path(f).name for f in sorted(needed_files)]
+    if item_names:
+        actions.append({
+            "step": len(actions) + 1,
+            "tool": "move_items_to_bin",
+            "arguments": {
+                "binName": bin_target,
+                "itemIds": item_names
+            }
+        })
+
+    # 4. Sequence Setup
+    dest_seq_id = sequence_id or target_seq
+    if sequence_mode == "new_clone":
+        actions.append({
+            "step": len(actions) + 1,
+            "tool": "duplicate_sequence",
+            "arguments": {
+                "sequenceId": sequence_id or "active",
+                "newName": target_seq,
+                "clearContents": True
+            }
+        })
+        dest_seq_id = target_seq
+    elif sequence_mode == "preset":
+        default_preset = "/Applications/Adobe Premiere Pro 2025/Adobe Premiere Pro 2025.app/Contents/Settings/SequencePresets/HD 1080p/HD 1080p 59.94 fps.sqpreset"
+        actions.append({
+            "step": len(actions) + 1,
+            "tool": "create_sequence",
+            "arguments": {
+                "name": target_seq,
+                "presetPath": preset_path or default_preset
+            }
+        })
+        dest_seq_id = target_seq
+
+    # 5. Batch Video V1 + Auto-linked Audio A1
     batch_v1 = []
     for c in v1_clips:
         clip_spec = {
@@ -85,12 +139,12 @@ def generate_premiere_mcp_actions(pacing_manifest, sequence_id=None):
             "step": len(actions) + 1,
             "tool": "add_to_timeline_batch",
             "arguments": {
-                "sequenceId": sequence_id or seq_name,
+                "sequenceId": dest_seq_id,
                 "clips": batch_v1
             }
         })
 
-    # 3. Batch Audio Design: A3 (SFX Whoosh = track 2), A4 (SFX Climax = track 3), A5 (BGM = track 4)
+    # 6. Batch Audio Design: A3 (SFX Whoosh = track 2), A4 (SFX Climax = track 3), A5 (BGM = track 4)
     # Note: Audio Track A2 (trackIndex: 1) is DELIBERATELY RESERVED FOR VOICEOVER!
     batch_audio = []
     for s in a3_sfx:
@@ -117,12 +171,12 @@ def generate_premiere_mcp_actions(pacing_manifest, sequence_id=None):
             "step": len(actions) + 1,
             "tool": "add_to_timeline_batch",
             "arguments": {
-                "sequenceId": sequence_id or seq_name,
+                "sequenceId": dest_seq_id,
                 "clips": batch_audio
             }
         })
 
-    # 4. Climax Action Peak Markers (top peaks only to avoid UI noise)
+    # 7. Climax Action Peak Markers (top peaks only to avoid UI noise)
     peak_clips = [c for c in v1_clips if c.get("climax_marker") is not None]
     peak_clips.sort(key=lambda x: x.get("interest_score", 0), reverse=True)
     for c in peak_clips[:5]:  # Top 5 critical story beats
@@ -130,7 +184,7 @@ def generate_premiere_mcp_actions(pacing_manifest, sequence_id=None):
             "step": len(actions) + 1,
             "tool": "add_marker",
             "arguments": {
-                "sequenceId": sequence_id or seq_name,
+                "sequenceId": dest_seq_id,
                 "name": f"Peak: {c['clip_id']} ({c.get('narrative_role', 'Action')})",
                 "time": c["climax_marker"],
                 "comment": f"Interest Score: {c.get('interest_score', 0)}"

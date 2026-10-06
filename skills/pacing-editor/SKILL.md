@@ -58,13 +58,17 @@ See full engineering specification in [`references/SPEC_AND_PLAN.md`](references
 > [!CAUTION]
 > **QUY TẮC BẮT BUỘC: KHÔNG TỰ ĐỘNG DỰNG TIMELINE KHI CHƯA HỎI NGƯỜI DÙNG**
 > Khi người dùng yêu cầu dựng timeline hoặc chạy pacing editor, Agent **TUYỆT ĐỐI KHÔNG** tự ý chạy với tham số mặc định.
-> Agent **PHẢI DỪNG LẠI** và sử dụng công cụ `ask_question` (hoặc hiển thị menu câu hỏi) để xác nhận:
-> 1. **Tên Sequence Premiere**: Mặc định `W_Curve_Master` hay tên tùy chỉnh?
-> 2. **Chế độ dựng (`--mode`)**:
->    - `w-curve`: Đảo cảnh kích thích giữ chân người xem theo mô hình W-Curve (Khuyên dùng)
+> Agent **PHẢI DỪNG LẠI** và sử dụng công cụ `ask_question` (hoặc hiển thị menu câu hỏi) để xác nhận các thông số sau:
+> 1. **Tuỳ chọn Sequence Premiere (`--seq-mode`)**:
+>    - `active`    : Dùng sequence đang mở sẵn trong Premiere (mặc định)
+>    - `new_clone` : Tạo sequence mới sạch (nhân bản cấu hình độ phân giải/fps từ sequence hiện có - Khuyên dùng)
+>    - `preset`    : Tạo sequence theo Preset chuẩn của Premiere (VD: HD 1080p 59.94 fps)
+> 2. **Tên Bin lưu trữ footage (`--bin-name`)**: Mặc định `Scenes` (Nghiêm cấm để footage rải rác ngoài thư mục gốc Root của Project Panel).
+> 3. **Chế độ dựng nhịp (`--mode`)**:
+>    - `w-curve`: Đảo cảnh kích thích giữ chân người xem theo mô hình tâm lý W-Curve (Khuyên dùng)
 >    - `sequential`: Giữ nguyên thứ tự thời gian gốc
-> 3. **Thời lượng mong muốn (`--target-duration`)**: 30s, 60s hay dựng toàn bộ clips?
-> 4. **Đích xuất**: Nạp trực tiếp vào Premiere Pro qua MCP (`--premiere-plan`) hay render ra file MP4 (`--render`)?
+> 4. **Thời lượng mong muốn (`--target-duration`)**: 30s, 60s hay dựng toàn bộ clips?
+> 5. **Đích xuất**: Nạp trực tiếp vào Premiere Pro qua MCP (`--premiere-plan`) hay render ra file MP4 (`--render`)?
 
 ---
 
