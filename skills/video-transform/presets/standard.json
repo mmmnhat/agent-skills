@@ -1,0 +1,9 @@
+{
+  "name": "standard",
+  "description": "Balanced anti-fingerprinting. 15% crop, 2.0 deg tilt, flipped, 1.02x speed.",
+  "crop_ratio": 0.85,
+  "rotate_deg": 2.0,
+  "enable_flip": true,
+  "speed": 1.02,
+  "preserve_pitch": true
+}

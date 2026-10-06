@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CleanCutScenesContext",
+  "type": "object",
+  "required": ["source_video", "generated_at", "total_scenes", "total_incidents", "output_directory", "scenes"],
+  "properties": {
+    "source_video": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "total_scenes": { "type": "integer" },
+    "total_incidents": { "type": "integer" },
+    "clean_master_scenes": { "type": "integer" },
+    "intra_duplicates_count": { "type": "integer" },
+    "cross_duplicates_count": { "type": "integer" },
+    "output_directory": { "type": "string" },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "scene_id",
+          "incident_id",
+          "shot_index",
+          "is_continuation",
+          "file_name",
+          "file_path",
+          "start_time",
+          "end_time",
+          "duration",
+          "aspect_ratio",
+          "native_resolution"
+        ],
+        "properties": {
+          "scene_id": { "type": "integer" },
+          "incident_id": { "type": "integer" },
+          "shot_index": { "type": "integer" },
+          "is_continuation": { "type": "boolean" },
+          "continuation_of": { "type": ["string", "null"] },
+          "variation_type": { "type": "string" },
+          "file_name": { "type": "string" },
+          "target_folder": { "type": "string" },
+          "file_path": { "type": "string" },
+          "filmstrip_path": { "type": "string" },
+          "start_time": { "type": "number" },
+          "end_time": { "type": "number" },
+          "duration": { "type": "number" },
+          "has_blur": { "type": "boolean" },
+          "aspect_ratio": { "type": "string" },
+          "temporal_landmarks": {
+            "type": "object",
+            "properties": {
+              "action_peak_rel_sec": { "type": "number" },
+              "phases": { "type": "object" },
+              "pacing_recommendations": { "type": "object" }
+            }
+          },
+          "native_resolution": {
+            "type": "object",
+            "properties": {
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          },
+          "crop_box": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "w": { "type": "integer" },
+              "h": { "type": "integer" }
+            }
+          },
+          "deduplication": {
+            "type": "object",
+            "properties": {
+              "is_intra_duplicate": { "type": "boolean" },
+              "is_cross_duplicate": { "type": "boolean" }
+            }
+          },
+          "premiere_pro": {
+            "type": "object",
+            "properties": {
+              "suggested_track": { "type": "string" },
+              "in_point": { "type": "number" },
+              "out_point": { "type": "number" },
+              "clip_name": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

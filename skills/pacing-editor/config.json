@@ -1,0 +1,45 @@
+{
+  "skill_name": "pacing-editor",
+  "version": "1.0.0",
+  "author": "Antigravity Agentic Studio",
+  "description": "High-retention sequence assembly, GPU Optical Flow speed ramping, and automated SFX/BGM sound design for Premiere Pro",
+  "target_platforms": {
+    "reels_shorts": {
+      "aspect_ratio": "9:16",
+      "resolution": [1080, 1920],
+      "fps": 60,
+      "max_clip_duration_sec": 4.5,
+      "speed_ramp_climax": 0.5,
+      "time_interpolation": "Optical Flow"
+    },
+    "landscape_youtube": {
+      "aspect_ratio": "16:9",
+      "resolution": [1920, 1080],
+      "fps": 60,
+      "max_clip_duration_sec": 7.0,
+      "speed_ramp_climax": 0.6,
+      "time_interpolation": "Optical Flow"
+    }
+  },
+  "sound_design": {
+    "enable_transitions": true,
+    "transition_sfx_intent": "whoosh chuyen canh",
+    "climax_sfx_intent": "impact boom manh",
+    "audio_tracks": {
+      "original_audio": "A1",
+      "sfx_track": "A2",
+      "bgm_track": "A3"
+    },
+    "default_volumes": {
+      "original_audio_db": 0.0,
+      "sfx_db": -2.0,
+      "bgm_ducked_db": -18.0,
+      "bgm_normal_db": -12.0
+    }
+  },
+  "premiere_bridge": {
+    "default_sequence_name": "Pacing_Master_Sequence",
+    "enable_markers": true,
+    "time_interpolation_type": 2
+  }
+}

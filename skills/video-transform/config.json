@@ -1,0 +1,13 @@
+{
+  "scale_crop_ratio": 0.92,
+  "rotate_deg": 1.0,
+  "enable_flip": true,
+  "speed_range": [
+    1.01,
+    1.01
+  ],
+  "preserve_pitch": true,
+  "output_dir": "E:\\Video Asset\\test_transform",
+  "prefix": "remix_",
+  "encoder": "auto"
+}

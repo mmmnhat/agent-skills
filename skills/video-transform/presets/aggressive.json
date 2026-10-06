@@ -1,0 +1,9 @@
+{
+  "name": "aggressive",
+  "description": "Deep transformation. 20% crop, 2.5 deg tilt, flipped, 1.04x speed.",
+  "crop_ratio": 0.80,
+  "rotate_deg": 2.5,
+  "enable_flip": true,
+  "speed": 1.04,
+  "preserve_pitch": true
+}

@@ -1,0 +1,8 @@
+{
+  "output_manifest": "scenes_context.json",
+  "thumbnails_dir": "thumbnails",
+  "check_unblur": true,
+  "check_duplicates": true,
+  "library_index_file": "library_index.json",
+  "min_clip_duration_sec": 0.5
+}

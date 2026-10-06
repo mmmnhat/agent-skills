@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContentShieldManifest",
+  "type": "object",
+  "properties": {
+    "source_file": { "type": "string" },
+    "created_at": { "type": "string" },
+    "duration_seconds": { "type": "number" },
+    "video_dimensions": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "integer" },
+        "height": { "type": "integer" }
+      },
+      "required": ["width", "height"]
+    },
+    "shield_jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "job_id": { "type": "string" },
+          "mode": { "type": "string", "enum": ["delogo", "gaussian_blur", "mosaic", "solid_mask"] },
+          "zone_name": { "type": "string" },
+          "is_static": { "type": "boolean" },
+          "initial_box": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 4,
+            "maxItems": 4,
+            "description": "[x, y, width, height] in pixel coordinates"
+          },
+          "keyframe_trajectory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "frame": { "type": "integer" },
+                "time_sec": { "type": "number" },
+                "box": {
+                  "type": "array",
+                  "items": { "type": "number" },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                "confidence": { "type": "number" }
+              },
+              "required": ["frame", "time_sec", "box"]
+            }
+          },
+          "premiere_bridge": {
+            "type": "object",
+            "properties": {
+              "target_track": { "type": "string" },
+              "effect_name": { "type": "string" },
+              "clip_node_id": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "required": ["job_id", "mode", "initial_box"]
+      }
+    }
+  },
+  "required": ["source_file", "shield_jobs"]
+}

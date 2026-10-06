@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PacingManifest",
+  "type": "object",
+  "properties": {
+    "sequence_name": { "type": "string" },
+    "created_at": { "type": "string" },
+    "format": {
+      "type": "object",
+      "properties": {
+        "aspect_ratio": { "type": "string" },
+        "resolution": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "fps": { "type": "number" }
+      },
+      "required": ["aspect_ratio", "resolution", "fps"]
+    },
+    "total_duration_seconds": { "type": "number" },
+    "tracks": {
+      "type": "object",
+      "properties": {
+        "V1": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clip_id": { "type": "string" },
+              "file_path": { "type": "string" },
+              "timeline_in": { "type": "number" },
+              "timeline_out": { "type": "number" },
+              "source_in": { "type": "number" },
+              "source_out": { "type": "number" },
+              "speed_curve": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "phase": { "type": "string" },
+                    "speed": { "type": "number" },
+                    "duration_sec": { "type": "number" }
+                  }
+                }
+              },
+              "optical_flow": { "type": "boolean" },
+              "climax_marker": { "type": ["number", "null"] }
+            },
+            "required": ["clip_id", "file_path", "timeline_in", "timeline_out"]
+          }
+        },
+        "A2": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sfx_id": { "type": "string" },
+              "file_path": { "type": "string" },
+              "role": { "type": "string", "enum": ["transition", "climax_impact", "reaction"] },
+              "timeline_in": { "type": "number" },
+              "volume_db": { "type": "number" }
+            },
+            "required": ["file_path", "timeline_in"]
+          }
+        },
+        "A3": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bgm_id": { "type": "string" },
+              "file_path": { "type": "string" },
+              "timeline_in": { "type": "number" },
+              "timeline_out": { "type": "number" },
+              "ducked": { "type": "boolean" }
+            },
+            "required": ["file_path", "timeline_in", "timeline_out"]
+          }
+        }
+      },
+      "required": ["V1", "A2"]
+    }
+  },
+  "required": ["sequence_name", "format", "tracks"]
+}

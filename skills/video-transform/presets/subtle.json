@@ -1,0 +1,9 @@
+{
+  "name": "subtle",
+  "description": "Minimal distortion. Gentle crop, slight tilt, flipped, 1.01x speed.",
+  "crop_ratio": 0.92,
+  "rotate_deg": 1.0,
+  "enable_flip": true,
+  "speed": 1.01,
+  "preserve_pitch": true
+}

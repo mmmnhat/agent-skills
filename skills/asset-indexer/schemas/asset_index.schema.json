@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AssetIndexManifest",
+  "description": "Schema for indexed multimedia assets library with Ask & Remember affinity support",
+  "type": "object",
+  "required": ["root_path", "indexed_at", "total_assets", "categories_summary", "assets"],
+  "properties": {
+    "root_path": { "type": "string" },
+    "indexed_at": { "type": "string" },
+    "total_assets": { "type": "integer" },
+    "categories_summary": {
+      "type": "object",
+      "additionalProperties": { "type": "integer" }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "file_name", "rel_path", "full_path", "category", "media_type", "duration", "tags"],
+        "properties": {
+          "id": { "type": "string" },
+          "file_name": { "type": "string" },
+          "rel_path": { "type": "string" },
+          "full_path": { "type": "string" },
+          "category": { "type": "string" },
+          "subcategory": { "type": "string" },
+          "media_type": { "type": "string", "enum": ["audio", "video", "image", "gif"] },
+          "duration": { "type": "number" },
+          "size_bytes": { "type": "integer" },
+          "format": { "type": "string" },
+          "resolution": {
+            "type": "object",
+            "properties": {
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          },
+          "aspect_ratio": { "type": "string" },
+          "has_alpha": { "type": "boolean" },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "usage_count": { "type": "integer" },
+          "affinity_score": { "type": "number" }
+        }
+      }
+    }
+  }
+}

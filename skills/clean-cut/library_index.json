@@ -1,0 +1,1484 @@
+{
+  "clips": [
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_001.mp4",
+      "duration": 10.06,
+      "aspect_ratio": "9:16",
+      "hash_orig": 14841759452140771415,
+      "hash_flip": 11001690031893039362
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_002.mp4",
+      "duration": 11.49,
+      "aspect_ratio": "9:16",
+      "hash_orig": 11669352255956962496,
+      "hash_flip": 17628719901980137877
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_003.mp4",
+      "duration": 5.42,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13223497923099710058,
+      "hash_flip": 16345278395911505727
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_004.mp4",
+      "duration": 7.89,
+      "aspect_ratio": "1:1",
+      "hash_orig": 11236821599427019787,
+      "hash_flip": 14890132786590489050
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_005.mp4",
+      "duration": 2.36,
+      "aspect_ratio": "9:16",
+      "hash_orig": 15308911296454058006,
+      "hash_flip": 9448966407913911755
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_006.mp4",
+      "duration": 3.76,
+      "aspect_ratio": "4:5",
+      "hash_orig": 14500309666386322344,
+      "hash_flip": 10983755597946189560
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_007.mp4",
+      "duration": 8.89,
+      "aspect_ratio": "9:16",
+      "hash_orig": 15154763617412106019,
+      "hash_flip": 14341110902559463030
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_008.mp4",
+      "duration": 12.79,
+      "aspect_ratio": "1:1",
+      "hash_orig": 10056471656696912956,
+      "hash_flip": 16058313335430529385
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_009.mp4",
+      "duration": 5.99,
+      "aspect_ratio": "4:5",
+      "hash_orig": 9506157874608047830,
+      "hash_flip": 14283585598301029251
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_010.mp4",
+      "duration": 10.12,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16564576664204123538,
+      "hash_flip": 12732916274389698759
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_011.mp4",
+      "duration": 10.32,
+      "aspect_ratio": "16:9",
+      "hash_orig": 18415855364032476858,
+      "hash_flip": 12304986143970157455
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_012.mp4",
+      "duration": 5.76,
+      "aspect_ratio": "9:16",
+      "hash_orig": 14532762713423980992,
+      "hash_flip": 11311541318408779904
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_013.mp4",
+      "duration": 3.39,
+      "aspect_ratio": "1:1",
+      "hash_orig": 14419638662894925712,
+      "hash_flip": 11333763395784962757
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_014.mp4",
+      "duration": 8.79,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9895593909795185370,
+      "hash_flip": 15853061487679059855
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_015.mp4",
+      "duration": 12.46,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9638576736550153381,
+      "hash_flip": 15030287857451217392
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_016.mp4",
+      "duration": 11.22,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10421547645815726017,
+      "hash_flip": 14264469072030777493
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_017.mp4",
+      "duration": 3.36,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13622201494344082812,
+      "hash_flip": 16743993365975658537
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_018.mp4",
+      "duration": 21.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13656992785259678108,
+      "hash_flip": 16776673604756364489
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_019.mp4",
+      "duration": 6.06,
+      "aspect_ratio": "4:3",
+      "hash_orig": 14965593823888389253,
+      "hash_flip": 11161376866180325840
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_020.mp4",
+      "duration": 1.59,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11719937758121975193,
+      "hash_flip": 17721875772472887500
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_021.mp4",
+      "duration": 16.76,
+      "aspect_ratio": "1:1",
+      "hash_orig": 15038627940816175985,
+      "hash_flip": 9648580922173920933
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_022.mp4",
+      "duration": 4.36,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13669476986556112914,
+      "hash_flip": 16782359104761537639
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_023.mp4",
+      "duration": 7.53,
+      "aspect_ratio": "16:9",
+      "hash_orig": 18342255888296011419,
+      "hash_flip": 12311026988610761166
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_024.mp4",
+      "duration": 8.39,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15908597290550530783,
+      "hash_flip": 9913519712867993480
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_025.mp4",
+      "duration": 7.46,
+      "aspect_ratio": "4:5",
+      "hash_orig": 14394842071474812855,
+      "hash_flip": 10561387311433499875
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_026.mp4",
+      "duration": 15.22,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10823217762164786768,
+      "hash_flip": 14080115440304165637
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_027.mp4",
+      "duration": 3.76,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11822271298333824023,
+      "hash_flip": 17385148346476234070
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_028.mp4",
+      "duration": 3.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10640680075065740428,
+      "hash_flip": 13903770331900516696
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_029.mp4",
+      "duration": 8.72,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9661737624626420142,
+      "hash_flip": 15222226632249380091
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_030.mp4",
+      "duration": 7.86,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14925193339403930584,
+      "hash_flip": 11112532121789913740
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_031.mp4",
+      "duration": 6.72,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13155461676083199178,
+      "hash_flip": 16340400735489452445
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_032.mp4",
+      "duration": 5.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16846846911229410879,
+      "hash_flip": 13589984973835889514
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_033.mp4",
+      "duration": 1.68,
+      "aspect_ratio": "4:5",
+      "hash_orig": 11387182595906570133,
+      "hash_flip": 14650837868016227010
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_034.mp4",
+      "duration": 6.14,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13767287235378956152,
+      "hash_flip": 16886928058540167724
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_035.mp4",
+      "duration": 9.93,
+      "aspect_ratio": "4:5",
+      "hash_orig": 14643537120588929031,
+      "hash_flip": 10839353105941155158
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_036.mp4",
+      "duration": 16.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11830280241303250929,
+      "hash_flip": 17399881900505870981
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_037.mp4",
+      "duration": 4.56,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9257241222039448893,
+      "hash_flip": 15360941108747499624
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_038.mp4",
+      "duration": 6.03,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9867865254091715467,
+      "hash_flip": 15962101186410783886
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_039.mp4",
+      "duration": 4.22,
+      "aspect_ratio": "4:5",
+      "hash_orig": 14962563710434037929,
+      "hash_flip": 11146656735165875644
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_040.mp4",
+      "duration": 1.69,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13394487152891872921,
+      "hash_flip": 17056137070725174220
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_041.mp4",
+      "duration": 1.73,
+      "aspect_ratio": "4:5",
+      "hash_orig": 13813597704749760708,
+      "hash_flip": 16925253874326936977
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_042.mp4",
+      "duration": 1.69,
+      "aspect_ratio": "9:16",
+      "hash_orig": 11815347843470466275,
+      "hash_flip": 17773976093559703970
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_043.mp4",
+      "duration": 4.12,
+      "aspect_ratio": "4:5",
+      "hash_orig": 17195193551689964260,
+      "hash_flip": 13521158734906396337
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_044.mp4",
+      "duration": 14.29,
+      "aspect_ratio": "16:9",
+      "hash_orig": 18404911196275230901,
+      "hash_flip": 11690839327298620896
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_045.mp4",
+      "duration": 5.06,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10742601238124083947,
+      "hash_flip": 13853130408458939310
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_046.mp4",
+      "duration": 11.06,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15223405508350317031,
+      "hash_flip": 14290260208334099642
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_047.mp4",
+      "duration": 12.46,
+      "aspect_ratio": "1:1",
+      "hash_orig": 12957553135786671622,
+      "hash_flip": 16611297125258849042
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_048.mp4",
+      "duration": 10.43,
+      "aspect_ratio": "16:9",
+      "hash_orig": 17061945282370645278,
+      "hash_flip": 13374975735083036743
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_049.mp4",
+      "duration": 9.69,
+      "aspect_ratio": "4:5",
+      "hash_orig": 12440528976332152396,
+      "hash_flip": 18010165804740250393
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_050.mp4",
+      "duration": 2.59,
+      "aspect_ratio": "4:5",
+      "hash_orig": 10990993337726582096,
+      "hash_flip": 14831074235739662349
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_051.mp4",
+      "duration": 15.22,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14814984537767234928,
+      "hash_flip": 11010229773616159157
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_052.mp4",
+      "duration": 17.73,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16251387791657584344,
+      "hash_flip": 13032804080165819277
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_053.mp4",
+      "duration": 9.43,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15988803480975361817,
+      "hash_flip": 9851326599176507981
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_054.mp4",
+      "duration": 30.36,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15007690056916118206,
+      "hash_flip": 9589082535878524651
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_055.mp4",
+      "duration": 4.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14572000618807595764,
+      "hash_flip": 11488524363563123617
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_056.mp4",
+      "duration": 6.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10982687656953236269,
+      "hash_flip": 14789554447584762456
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_057.mp4",
+      "duration": 14.46,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9672159311194961762,
+      "hash_flip": 15235463068182258225
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_058.mp4",
+      "duration": 14.43,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14057679235739067317,
+      "hash_flip": 10688050845608179392
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_059.mp4",
+      "duration": 1.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10993446468789827287,
+      "hash_flip": 14827472947378992027
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_060.mp4",
+      "duration": 4.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9485810379237490362,
+      "hash_flip": 15479165598268402635
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_061.mp4",
+      "duration": 2.02,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10754433598566930648,
+      "hash_flip": 13864959504691415437
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_062.mp4",
+      "duration": 9.09,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9625061552657676743,
+      "hash_flip": 15043803061610572946
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_063.mp4",
+      "duration": 16.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13216323497246808534,
+      "hash_flip": 16302051432081525891
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_064.mp4",
+      "duration": 4.53,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9992826348047538831,
+      "hash_flip": 11527229065414885528
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_065.mp4",
+      "duration": 23.16,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15283260141339079270,
+      "hash_flip": 9316959488104982387
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_066.mp4",
+      "duration": 16.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10718782320387791111,
+      "hash_flip": 13949221376342019186
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_067.mp4",
+      "duration": 4.88,
+      "aspect_ratio": "9:16",
+      "hash_orig": 14184257060830062572,
+      "hash_flip": 10415928600939164345
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_068.mp4",
+      "duration": 4.67,
+      "aspect_ratio": "9:16",
+      "hash_orig": 14175528867751046375,
+      "hash_flip": 10514864103871609264
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_069.mp4",
+      "duration": 12.76,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14522620773374738901,
+      "hash_flip": 11373792426212758656
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_070.mp4",
+      "duration": 9.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14532313846449484126,
+      "hash_flip": 11310879696168281099
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_071.mp4",
+      "duration": 10.46,
+      "aspect_ratio": "16:9",
+      "hash_orig": 17882754472098248612,
+      "hash_flip": 12427994502460138224
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_072.mp4",
+      "duration": 2.92,
+      "aspect_ratio": "9:16",
+      "hash_orig": 9674055779076701851,
+      "hash_flip": 15209906277954694094
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_073.mp4",
+      "duration": 1.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16079673133431874242,
+      "hash_flip": 9976366906380924823
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_074.mp4",
+      "duration": 1.99,
+      "aspect_ratio": "9:16",
+      "hash_orig": 9566261858112339615,
+      "hash_flip": 15102651117687942090
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_075.mp4",
+      "duration": 7.36,
+      "aspect_ratio": "1:1",
+      "hash_orig": 14391526816176163094,
+      "hash_flip": 10587307632230735555
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_076.mp4",
+      "duration": 14.36,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15344655111399811224,
+      "hash_flip": 9270236329546497228
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_077.mp4",
+      "duration": 19.36,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14139432223442974919,
+      "hash_flip": 10483270955476383123
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_078.mp4",
+      "duration": 5.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9474585982010345573,
+      "hash_flip": 15431910222314740538
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_079.mp4",
+      "duration": 3.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16854943579905595933,
+      "hash_flip": 13600198760072432200
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_080.mp4",
+      "duration": 7.78,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10252838620393230787,
+      "hash_flip": 15788555361094771862
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_081.mp4",
+      "duration": 4.19,
+      "aspect_ratio": "1:1",
+      "hash_orig": 18160415270738122445,
+      "hash_flip": 12345376109019892632
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_082.mp4",
+      "duration": 3.81,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13871253600037168856,
+      "hash_flip": 15408433848094503693
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_083.mp4",
+      "duration": 9.43,
+      "aspect_ratio": "16:9",
+      "hash_orig": 18053597412572012339,
+      "hash_flip": 13825794001968646774
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_084.mp4",
+      "duration": 14.86,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15300255388615849588,
+      "hash_flip": 10448413137361789807
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_085.mp4",
+      "duration": 6.83,
+      "aspect_ratio": "1:1",
+      "hash_orig": 15894509074177678442,
+      "hash_flip": 9926486216910310207
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_086.mp4",
+      "duration": 9.16,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9843970639802350547,
+      "hash_flip": 15981474564191710342
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_087.mp4",
+      "duration": 8.59,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14861506358820367172,
+      "hash_flip": 11198473274309099025
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_088.mp4",
+      "duration": 5.83,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15335561040109454941,
+      "hash_flip": 9333585805045560140
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_089.mp4",
+      "duration": 7.76,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10863479895321177292,
+      "hash_flip": 14093875658080795035
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_090.mp4",
+      "duration": 23.86,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14424305674631670246,
+      "hash_flip": 11346881672022277299
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_091.mp4",
+      "duration": 5.56,
+      "aspect_ratio": "1:1",
+      "hash_orig": 13865060238238732204,
+      "hash_flip": 10754246844290276089
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_092.mp4",
+      "duration": 4.19,
+      "aspect_ratio": "1:1",
+      "hash_orig": 16254958779408942908,
+      "hash_flip": 13024519757705892713
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_093.mp4",
+      "duration": 7.99,
+      "aspect_ratio": "16:9",
+      "hash_orig": 12244066574860899847,
+      "hash_flip": 18212237883400847696
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_094.mp4",
+      "duration": 7.92,
+      "aspect_ratio": "1:1",
+      "hash_orig": 9851304186518506812,
+      "hash_flip": 15988774438599678057
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_095.mp4",
+      "duration": 9.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16489516776473607066,
+      "hash_flip": 12791310843066772171
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_096.mp4",
+      "duration": 5.59,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11000406882385991535,
+      "hash_flip": 14842772091638661690
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_097.mp4",
+      "duration": 6.83,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9671201781036805930,
+      "hash_flip": 15231833168937466431
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_098.mp4",
+      "duration": 9.76,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14298627347573785440,
+      "hash_flip": 10609276215259012788
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_099.mp4",
+      "duration": 14.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10271739303105101879,
+      "hash_flip": 15697807963985728864
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_100.mp4",
+      "duration": 26.32,
+      "aspect_ratio": "4:5",
+      "hash_orig": 18226958854352310684,
+      "hash_flip": 12152541230563166410
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_101.mp4",
+      "duration": 6.83,
+      "aspect_ratio": "4:5",
+      "hash_orig": 13128212050881071827,
+      "hash_flip": 16673898231701282726
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_102.mp4",
+      "duration": 11.79,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14432849717764853581,
+      "hash_flip": 11321518458661624336
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_103.mp4",
+      "duration": 20.02,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13299003202130314103,
+      "hash_flip": 17139241691753469474
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_104.mp4",
+      "duration": 4.66,
+      "aspect_ratio": "1:1",
+      "hash_orig": 17342190993537316192,
+      "hash_flip": 11961155466896107573
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_105.mp4",
+      "duration": 2.36,
+      "aspect_ratio": "4:5",
+      "hash_orig": 12370637782961016889,
+      "hash_flip": 18372470758644351528
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_106.mp4",
+      "duration": 2.89,
+      "aspect_ratio": "4:5",
+      "hash_orig": 16202133651610154414,
+      "hash_flip": 13080947437586432184
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_107.mp4",
+      "duration": 16.59,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14192128682989223674,
+      "hash_flip": 10782134060710964015
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_108.mp4",
+      "duration": 13.56,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15593929853571097332,
+      "hash_flip": 10177451011227236101
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_109.mp4",
+      "duration": 3.23,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13229592526671858348,
+      "hash_flip": 16342895756344889081
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_110.mp4",
+      "duration": 7.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11433580913610023609,
+      "hash_flip": 14697893303458476776
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_111.mp4",
+      "duration": 4.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11934982952642135247,
+      "hash_flip": 17362720800394090906
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_112.mp4",
+      "duration": 17.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14136064186261287478,
+      "hash_flip": 10482187705737078113
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_113.mp4",
+      "duration": 14.99,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13443968929224848618,
+      "hash_flip": 17277998210262016405
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_114.mp4",
+      "duration": 14.93,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16179636317027347631,
+      "hash_flip": 13104570930531228144
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_115.mp4",
+      "duration": 12.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10159477095165989610,
+      "hash_flip": 15685021296029288383
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_116.mp4",
+      "duration": 4.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 17731379148960015423,
+      "hash_flip": 11770111658327962986
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_117.mp4",
+      "duration": 5.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13950211712827473534,
+      "hash_flip": 10722022832852069155
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_118.mp4",
+      "duration": 6.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10571463969959799331,
+      "hash_flip": 14402572274880094070
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_119.mp4",
+      "duration": 10.93,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13003522889430715448,
+      "hash_flip": 16222140101532638061
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_120.mp4",
+      "duration": 5.16,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10617206625523257880,
+      "hash_flip": 14844621356484106063
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_121.mp4",
+      "duration": 6.79,
+      "aspect_ratio": "1:1",
+      "hash_orig": 15225409744794257475,
+      "hash_flip": 9664390735959383318
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_122.mp4",
+      "duration": 7.96,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11212631298562187755,
+      "hash_flip": 14901937926423483550
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_123.mp4",
+      "duration": 8.32,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16050964956334647666,
+      "hash_flip": 10057996759361563687
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_124.mp4",
+      "duration": 5.33,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15464037158402983157,
+      "hash_flip": 10650483756518438329
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_125.mp4",
+      "duration": 18.86,
+      "aspect_ratio": "16:9",
+      "hash_orig": 18079835028787004078,
+      "hash_flip": 12226480741677323408
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_126.mp4",
+      "duration": 12.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11064373010520523599,
+      "hash_flip": 14760787422734946826
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_127.mp4",
+      "duration": 5.39,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14613338020510577982,
+      "hash_flip": 11501160819558408307
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_128.mp4",
+      "duration": 15.06,
+      "aspect_ratio": "4:3",
+      "hash_orig": 16187368420425031258,
+      "hash_flip": 13110330931143134159
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_129.mp4",
+      "duration": 3.77,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14133156394198497315,
+      "hash_flip": 10481665828236864854
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_130.mp4",
+      "duration": 6.67,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13880531902386911683,
+      "hash_flip": 10796776939707884566
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_131.mp4",
+      "duration": 6.66,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14063952849857007283,
+      "hash_flip": 10842459875267615654
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_132.mp4",
+      "duration": 10.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9558788297656076596,
+      "hash_flip": 15128424692532566113
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_133.mp4",
+      "duration": 11.82,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10391855690843832166,
+      "hash_flip": 14222964538806594103
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_134.mp4",
+      "duration": 9.46,
+      "aspect_ratio": "1:1",
+      "hash_orig": 15976948875355169069,
+      "hash_flip": 9866492945365614200
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_135.mp4",
+      "duration": 4.92,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13898323708948192488,
+      "hash_flip": 10787694034507483549
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_136.mp4",
+      "duration": 5.56,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11592494842094538663,
+      "hash_flip": 17696197606528654048
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_137.mp4",
+      "duration": 10.56,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13986429716136344278,
+      "hash_flip": 10902250170331918211
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_138.mp4",
+      "duration": 7.59,
+      "aspect_ratio": "4:5",
+      "hash_orig": 10721185765747506405,
+      "hash_flip": 13951053180982786352
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_139.mp4",
+      "duration": 16.52,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11259909737843332176,
+      "hash_flip": 14633999947115612429
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_140.mp4",
+      "duration": 6.59,
+      "aspect_ratio": "9:16",
+      "hash_orig": 18348563305684364106,
+      "hash_flip": 12390638760022252575
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_141.mp4",
+      "duration": 5.72,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16195637110619236969,
+      "hash_flip": 13084966212948115224
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_142.mp4",
+      "duration": 6.33,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14105493077225599230,
+      "hash_flip": 10850739875889948075
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_143.mp4",
+      "duration": 11.09,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10011772282974213840,
+      "hash_flip": 16115463371609000581
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_144.mp4",
+      "duration": 21.73,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9573041100292943167,
+      "hash_flip": 15100309465866542184
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_145.mp4",
+      "duration": 10.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15301852012720543880,
+      "hash_flip": 9605698800294858205
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_146.mp4",
+      "duration": 25.86,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11381394918904862361,
+      "hash_flip": 14458669396389252040
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_147.mp4",
+      "duration": 10.03,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10536841917656158955,
+      "hash_flip": 14370762868914327486
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_148.mp4",
+      "duration": 6.66,
+      "aspect_ratio": "1:1",
+      "hash_orig": 17422051480987944469,
+      "hash_flip": 11858785759719839552
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_149.mp4",
+      "duration": 7.42,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14174602248592372507,
+      "hash_flip": 15123959393895870287
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_150.mp4",
+      "duration": 4.53,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16425669356633005950,
+      "hash_flip": 13161459941412981517
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_151.mp4",
+      "duration": 8.56,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11728747078985502166,
+      "hash_flip": 17839237545210517891
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_152.mp4",
+      "duration": 13.39,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14282113757276269483,
+      "hash_flip": 10619773309257301748
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_153.mp4",
+      "duration": 12.53,
+      "aspect_ratio": "9:16",
+      "hash_orig": 16588652767387091724,
+      "hash_flip": 12926151821113464393
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_154.mp4",
+      "duration": 17.52,
+      "aspect_ratio": "9:16",
+      "hash_orig": 16433999995393493932,
+      "hash_flip": 12773368226828917497
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_155.mp4",
+      "duration": 14.56,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13297885832893785190,
+      "hash_flip": 17284782250818287923
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_156.mp4",
+      "duration": 5.46,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15807815844373961306,
+      "hash_flip": 10247362145541277455
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_157.mp4",
+      "duration": 16.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15399449596974348858,
+      "hash_flip": 9360033454232005999
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_158.mp4",
+      "duration": 8.66,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13522564522343210538,
+      "hash_flip": 16925822198143257215
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_159.mp4",
+      "duration": 7.06,
+      "aspect_ratio": "16:9",
+      "hash_orig": 17416946719317301943,
+      "hash_flip": 11886188634851067873
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_160.mp4",
+      "duration": 17.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15284224594907144621,
+      "hash_flip": 9316025817793159416
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_161.mp4",
+      "duration": 5.03,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13319150961397739737,
+      "hash_flip": 17114369550137648396
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_162.mp4",
+      "duration": 8.62,
+      "aspect_ratio": "16:9",
+      "hash_orig": 12552821788892129464,
+      "hash_flip": 18113972127458831789
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_163.mp4",
+      "duration": 9.16,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9547423525353537057,
+      "hash_flip": 15071883609524333428
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_164.mp4",
+      "duration": 19.73,
+      "aspect_ratio": "16:9",
+      "hash_orig": 12369922274813223993,
+      "hash_flip": 18230464640647327820
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_165.mp4",
+      "duration": 10.06,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10414550153856772206,
+      "hash_flip": 14250160506399636795
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_166.mp4",
+      "duration": 15.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16327455768636229930,
+      "hash_flip": 13241587679891709023
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_167.mp4",
+      "duration": 20.06,
+      "aspect_ratio": "16:9",
+      "hash_orig": 13457710183314005405,
+      "hash_flip": 17264040412445919432
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_168.mp4",
+      "duration": 6.33,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14840331780109936041,
+      "hash_flip": 10999521424710955260
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_169.mp4",
+      "duration": 7.06,
+      "aspect_ratio": "16:9",
+      "hash_orig": 16910670584334129971,
+      "hash_flip": 13689693931813817670
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_170.mp4",
+      "duration": 3.19,
+      "aspect_ratio": "16:9",
+      "hash_orig": 17911248739139286652,
+      "hash_flip": 12521656872645042989
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_171.mp4",
+      "duration": 11.72,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14891860219260202097,
+      "hash_flip": 11096824046859530528
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_172.mp4",
+      "duration": 31.26,
+      "aspect_ratio": "16:9",
+      "hash_orig": 9562946795828202675,
+      "hash_flip": 15123998094229342694
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_173.mp4",
+      "duration": 14.72,
+      "aspect_ratio": "16:9",
+      "hash_orig": 11177337872152972185,
+      "hash_flip": 14864329333864373964
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_174.mp4",
+      "duration": 10.72,
+      "aspect_ratio": "16:9",
+      "hash_orig": 15480607142583294682,
+      "hash_flip": 9476558195772624783
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_175.mp4",
+      "duration": 4.39,
+      "aspect_ratio": "16:9",
+      "hash_orig": 18374265094115221895,
+      "hash_flip": 12369300846218687698
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_176.mp4",
+      "duration": 12.53,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10903580385074470136,
+      "hash_flip": 13985147797976026541
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_177.mp4",
+      "duration": 4.69,
+      "aspect_ratio": "4:5",
+      "hash_orig": 14912406228082912027,
+      "hash_flip": 11215888462343386190
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_178.mp4",
+      "duration": 2.21,
+      "aspect_ratio": "9:16",
+      "hash_orig": 14984501566397682025,
+      "hash_flip": 11143859902382752828
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_179.mp4",
+      "duration": 2.98,
+      "aspect_ratio": "4:5",
+      "hash_orig": 15912342056268207977,
+      "hash_flip": 11062999706181648956
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_180.mp4",
+      "duration": 17.52,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10846580275494590524,
+      "hash_flip": 14110795915774676265
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_181.mp4",
+      "duration": 10.39,
+      "aspect_ratio": "4:5",
+      "hash_orig": 12953546811717233874,
+      "hash_flip": 16623184714115185031
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_182.mp4",
+      "duration": 7.42,
+      "aspect_ratio": "16:9",
+      "hash_orig": 14051818191285752715,
+      "hash_flip": 11409662280671987422
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_183.mp4",
+      "duration": 15.43,
+      "aspect_ratio": "16:9",
+      "hash_orig": 12721442663682508274,
+      "hash_flip": 16563941353405202566
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_184.mp4",
+      "duration": 17.66,
+      "aspect_ratio": "1:1",
+      "hash_orig": 11429735371699210916,
+      "hash_flip": 14649020561398439664
+    },
+    {
+      "source_video": "dailycam_18",
+      "file_name": "scene_185.mp4",
+      "duration": 14.79,
+      "aspect_ratio": "16:9",
+      "hash_orig": 10108244935744996969,
+      "hash_flip": 15641677032489587516
+    }
+  ]
+}

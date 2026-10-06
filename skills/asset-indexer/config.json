@@ -1,0 +1,26 @@
+{
+  "asset_root": "E:\\Video Asset",
+  "index_path": "E:\\Video Asset\\asset_index.json",
+  "memory_path": "E:\\Video Asset\\asset_memory.json",
+  "supported_extensions": [
+    ".mp3", ".wav", ".m4a", ".aac",
+    ".mp4", ".mov", ".mkv", ".webm",
+    ".gif", ".png", ".jpg", ".jpeg"
+  ],
+  "max_workers": 16,
+  "vibe_mappings": {
+    "whoosh": ["chuyen_canh", "luot", "nhanh", "transition", "swipe", "zoom"],
+    "impact": ["dap", "va_cham", "manh", "drop", "hit", "thud"],
+    "punch": ["dam", "danh", "tai_nan", "hit", "fight", "climax"],
+    "laugh": ["cuoi", "hai_huoc", "funny", "joke", "troll"],
+    "cry": ["khoc", "buon", "sad", "dau_long", "that_vong"],
+    "omg": ["bat_ngo", "kinh_ngac", "soc", "gasp", "surprise"],
+    "bonk": ["go", "dap_dau", "hai_huoc", "head_hit", "cartoon"],
+    "ding": ["chuong", "thong_bao", "y_tuong", "correct", "success"],
+    "bell": ["chuong", "thong_bao", "alert", "ring"],
+    "suspense": ["hoi_hop", "cang_thang", "bi_an", "sus", "tension"],
+    "celebrate": ["an_mung", "chien_thang", "party", "cheer", "yay"],
+    "excited": ["phan_khich", "soi_dong", "hype", "energy"],
+    "timecard": ["thoi_gian", "chuyen_doan", "later", "moments_later", "sponge"]
+  }
+}

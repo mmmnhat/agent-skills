@@ -1,0 +1,62 @@
+{
+  "skill_name": "content-shield",
+  "version": "1.0.0",
+  "author": "Antigravity Agentic Studio",
+  "description": "Visual obscuration & watermark/logo/sensitive content shielding via OpenCV Tracking & Premiere Pro V2 Blur",
+  "default_mode": "delogo",
+  "modes": {
+    "delogo": {
+      "description": "FFmpeg delogo filter: smooth spatial interpolation of border pixels, virtually invisible removal of static bugs and watermarks.",
+      "feather": 2
+    },
+    "gaussian_blur": {
+      "description": "Heavy Gaussian Blur (radius 25-45) for privacy, license plates, sensitive wounds or adult elements.",
+      "blur_radius": 35
+    },
+    "mosaic": {
+      "description": "Pixelated mosaic blocks (15-25px) for censor bar aesthetics.",
+      "block_size": 20
+    },
+    "solid_mask": {
+      "description": "Black or colored matte box for complete blackout of sensitive zones.",
+      "color": "black"
+    }
+  },
+  "preset_zones": {
+    "top_left": {
+      "description": "Top-left broadcast TV bug or channel logo",
+      "relative_box": [0.02, 0.02, 0.22, 0.12]
+    },
+    "top_right": {
+      "description": "Top-right watermark, TikTok account tag, or live badge",
+      "relative_box": [0.76, 0.02, 0.22, 0.12]
+    },
+    "bottom_right": {
+      "description": "Bottom-right timestamp, recorder watermark, or logo",
+      "relative_box": [0.74, 0.86, 0.24, 0.12]
+    },
+    "bottom_left": {
+      "description": "Bottom-left recorder logo or branding badge",
+      "relative_box": [0.02, 0.86, 0.24, 0.12]
+    },
+    "bottom_center": {
+      "description": "Center bottom subtitles, banner, hotline, or ticker tape",
+      "relative_box": [0.10, 0.82, 0.80, 0.15]
+    },
+    "custom": {
+      "description": "User or AI-specified arbitrary bounding box [x, y, w, h]"
+    }
+  },
+  "tracking": {
+    "default_tracker": "CSRT",
+    "supported_trackers": ["CSRT", "KCF", "TEMPLATE", "STATIC"],
+    "sample_step_frames": 2,
+    "confidence_threshold": 0.45
+  },
+  "premiere_bridge": {
+    "target_track": "V2",
+    "effect_name": "Gaussian Blur",
+    "default_blurriness": 40.0,
+    "apply_feather": 15.0
+  }
+}

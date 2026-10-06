@@ -1,0 +1,22 @@
+{
+  "output_dir": "E:\\test-dung-ai\\output_clean_cut_18",
+  "prefix": "scene_",
+  "unblur_enabled": true,
+  "min_scene_duration_sec": 1.5,
+  "detector_threshold": 27.0,
+  "audio_snap_window_sec": 0.25,
+  "deduplication": {
+    "enable_intra_dedup": true,
+    "intro_cutoff_sec": 30.0,
+    "similarity_threshold": 0.7,
+    "max_phash_distance": 6,
+    "enable_cross_dedup": true,
+    "library_index_file": "library_index.json",
+    "move_duplicates": true
+  },
+  "encoder": "auto",
+  "premiere_pro": {
+    "auto_import": false,
+    "sequence_name": "CleanCut_Timeline"
+  }
+}

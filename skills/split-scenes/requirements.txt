@@ -1,0 +1,7 @@
+opencv-python>=4.8.0
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-image>=0.21.0
+librosa>=0.10.0
+faster-whisper>=1.0.0
+yt-dlp>=2024.0.0
