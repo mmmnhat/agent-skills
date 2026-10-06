@@ -63,7 +63,9 @@ def main():
 
     out_base = Path(args.output or (Path(input_source).parent if Path(input_source).is_file() else Path(input_source)))
     if out_base.is_dir():
-        manifest_file = out_base / f"{args.name}_manifest.json"
+        manifests_dir = out_base / "manifests" if (out_base / "manifests").exists() or (out_base / "scenes").exists() else out_base
+        manifests_dir.mkdir(parents=True, exist_ok=True)
+        manifest_file = manifests_dir / f"{args.name}_manifest.json"
     else:
         manifest_file = out_base.with_suffix(".json")
 
@@ -98,7 +100,9 @@ def main():
         print(f"\n  ✓ Premiere Pro Studio 5-Track Plan ({len(actions)} actions): {plan_file.name}")
 
     if args.render:
-        render_path = manifest_file.with_name(f"{args.name}_master.mp4")
+        exports_dir = out_base / "exports" if out_base.is_dir() else out_base.parent / "exports"
+        exports_dir.mkdir(parents=True, exist_ok=True)
+        render_path = exports_dir / f"{args.name}_master.mp4"
         print(f"\n[Pacing-Editor] Rendering master sequence via FFmpeg...")
         rendered = render_standalone_master(manifest, render_path)
         print(f"  ✓ Rendered successfully: {rendered}")

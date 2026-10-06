@@ -11,6 +11,8 @@ import json
 import functools
 import argparse
 import subprocess
+import shutil
+import concurrent.futures
 from datetime import datetime
 from pathlib import Path
 import cv2
@@ -124,11 +126,42 @@ def get_hsv_hist(frame):
     hist = cv2.calcHist([hsv], [0, 1], None, [16, 16], [0, 180, 0, 256])
     return cv2.normalize(hist, hist, 0, 1, cv2.NORM_MINMAX)
 
+_sift_engine = None
+_bf_matcher = None
+
+def get_geometric_inliers(f1, f2):
+    global _sift_engine, _bf_matcher
+    if f1 is None or f2 is None:
+        return 0
+    if _sift_engine is None:
+        _sift_engine = cv2.SIFT_create(nfeatures=600)
+        _bf_matcher = cv2.BFMatcher()
+    s1 = cv2.resize(f1, (640, 360))
+    s2 = cv2.resize(f2, (640, 360))
+    mask = np.zeros((360, 640), dtype=np.uint8)
+    mask[int(360 * 0.15):int(360 * 0.85), :] = 255
+    kp1, des1 = _sift_engine.detectAndCompute(s1, mask)
+    kp2, des2 = _sift_engine.detectAndCompute(s2, mask)
+    if des1 is None or des2 is None or len(des1) < 8 or len(des2) < 8:
+        return 0
+    matches = _bf_matcher.knnMatch(des1, des2, k=2)
+    good = [m for m, n in matches if m.distance < 0.75 * n.distance]
+    if len(good) < 8:
+        return 0
+    src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+    _, h_mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    return int(np.sum(h_mask)) if h_mask is not None else 0
+
 def resolve_video_input(src):
     if src.startswith("http://") or src.startswith("https://"):
         print(f"Downloading stream via yt-dlp: {src}")
         out_name = "downloaded_input.mp4"
-        cmd = ["yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", out_name, src]
+        cmd = [
+            sys.executable, "-m", "yt_dlp",
+            "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best",
+            "-o", out_name, src
+        ]
         subprocess.check_call(cmd)
         return out_name
     return src
@@ -136,7 +169,7 @@ def resolve_video_input(src):
 def generate_fast_proxy(video_path, proxy_path, height=240):
     """
     Generates an ultra-fast hardware-accelerated proxy (240p at NATIVE video framerate H.264)
-    using CUVID/CUDA hardware decoding and NVENC hardware encoding.
+    using CUVID/CUDA (on NVIDIA) or VideoToolbox (on Apple Silicon) or ultrafast CPU.
     Preserves exact 1:1 frame alignment with master video to eliminate boundary bleed.
     """
     p_path = Path(proxy_path)
@@ -144,7 +177,7 @@ def generate_fast_proxy(video_path, proxy_path, height=240):
         print(f"  • Using existing hardware proxy: {p_path.name}")
         return str(p_path)
         
-    print(f"  • Generating fast hardware proxy ({height}p @ native FPS via NVDEC/NVENC)...")
+    print(f"  • Generating fast hardware proxy ({height}p @ native FPS)...")
     
     probe_cmd = [
         "ffprobe", "-v", "error",
@@ -165,20 +198,39 @@ def generate_fast_proxy(video_path, proxy_path, height=240):
     }
     cuvid_dec = cuvid_decoders.get(codec)
     
+    enc = get_best_encoder()
     cmd = ["ffmpeg", "-y"]
-    if cuvid_dec:
-        cmd.extend(["-c:v", cuvid_dec])
+    if "nvenc" in enc:
+        if cuvid_dec:
+            cmd.extend(["-c:v", cuvid_dec])
+        else:
+            cmd.extend(["-hwaccel", "cuda"])
+        cmd.extend([
+            "-i", str(video_path),
+            "-vf", f"scale=-2:{height}",
+            "-c:v", "h264_nvenc",
+            "-preset", "p1",
+            "-an",
+            str(p_path)
+        ])
+    elif "videotoolbox" in enc:
+        cmd.extend([
+            "-i", str(video_path),
+            "-vf", f"scale=-2:{height}",
+            "-c:v", "h264_videotoolbox",
+            "-b:v", "1000k",
+            "-an",
+            str(p_path)
+        ])
     else:
-        cmd.extend(["-hwaccel", "cuda"])
-        
-    cmd.extend([
-        "-i", str(video_path),
-        "-vf", f"scale=-2:{height}",
-        "-c:v", "h264_nvenc",
-        "-preset", "p1",
-        "-an",
-        str(p_path)
-    ])
+        cmd.extend([
+            "-i", str(video_path),
+            "-vf", f"scale=-2:{height}",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-an",
+            str(p_path)
+        ])
     
     try:
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
@@ -211,12 +263,40 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
     cfg["unblur_enabled"] = do_unblur
     save_config(cfg)
     
+    # Clean previous run clips, thumbnails, duplicates, and manifests (preserving proxy cache)
+    if os.path.exists(out_dir):
+        for sub in ["scenes", "thumbnails", "manifests", "duplicates", "exports"]:
+            sub_p = os.path.join(out_dir, sub)
+            if os.path.exists(sub_p):
+                try:
+                    shutil.rmtree(sub_p)
+                except Exception:
+                    pass
+        for fname in os.listdir(out_dir):
+            fpath = os.path.join(out_dir, fname)
+            if fname.endswith("_proxy240p.mp4") or fname == "cache":
+                continue
+            if os.path.isfile(fpath):
+                try:
+                    os.remove(fpath)
+                except Exception:
+                    pass
+        print(f"  🧹 Cleaned previous run artifacts in '{out_dir}'.")
+
     os.makedirs(out_dir, exist_ok=True)
+    scenes_dir = os.path.join(out_dir, "scenes")
+    os.makedirs(scenes_dir, exist_ok=True)
     thumb_dir = os.path.join(out_dir, "thumbnails")
     os.makedirs(thumb_dir, exist_ok=True)
+    manifest_dir = os.path.join(out_dir, "manifests")
+    os.makedirs(manifest_dir, exist_ok=True)
+    cache_dir = os.path.join(out_dir, "cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    exports_dir = os.path.join(out_dir, "exports")
+    os.makedirs(exports_dir, exist_ok=True)
     
-    dup_dir = os.path.join(out_dir, "_duplicates")
-    cross_dup_dir = os.path.join(out_dir, "_cross_duplicates")
+    dup_dir = os.path.join(out_dir, "duplicates", "intra")
+    cross_dup_dir = os.path.join(out_dir, "duplicates", "cross")
     if move_duplicates:
         os.makedirs(dup_dir, exist_ok=True)
         os.makedirs(cross_dup_dir, exist_ok=True)
@@ -234,8 +314,15 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
     print(f"  • Unblur Detection: {'Enabled' if do_unblur else 'Disabled'}")
     print(f"  • Deduplication: Intra-video={'ON' if enable_intra else 'OFF'} | Cross-video={'ON' if enable_cross else 'OFF'}")
 
-    # Generate hardware proxy for ultra-fast scene detection & visual landmark extraction
-    proxy_path = os.path.join(out_dir, f"{video_stem}_proxy240p.mp4")
+    # Generate hardware proxy in cache/ for ultra-fast scene detection & visual landmark extraction
+    proxy_path = os.path.join(cache_dir, f"{video_stem}_proxy240p.mp4")
+    # Check if legacy proxy existed in out_dir root and reuse it
+    legacy_proxy = os.path.join(out_dir, f"{video_stem}_proxy240p.mp4")
+    if os.path.exists(legacy_proxy) and not os.path.exists(proxy_path):
+        try:
+            shutil.move(legacy_proxy, proxy_path)
+        except Exception:
+            pass
     scan_video = generate_fast_proxy(real_video, proxy_path, height=240)
 
     # 1. Fast-Proxy Scene Detection via PySceneDetect in RAM
@@ -276,20 +363,47 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         dur = e_sec - s_sec
         if dur < (min_dur * 0.7):
             continue
-            
-        # Read frame from proxy in RAM (<5ms seek) and map unblur directly to 1080p master dimensions
+        # Read frames from proxy in RAM (<5ms seek) with multi-checkpoint unblur check
         mid_frame_fn = int(((s_fn + e_fn) / 2))
         cap.set(cv2.CAP_PROP_POS_FRAMES, mid_frame_fn)
         ret, frame_proxy = cap.read()
         if not ret or frame_proxy is None:
             continue
-            
+
+        sample_fns = [
+            int(s_fn + dur * 0.25 * master_fps),
+            mid_frame_fn,
+            int(s_fn + dur * 0.75 * master_fps)
+        ]
         has_blur = False
-        box_master = (0, 0, master_w, master_h)
-        aspect_ratio = "16:9"
-        
-        if do_unblur:
-            has_blur, box_master, aspect_ratio = detect_unblur_box(frame_proxy, target_res=(master_w, master_h))
+        detected_boxes = []
+        for s_fn_sample in sample_fns:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, min(proxy_total_frames - 1, s_fn_sample)))
+            ret_s, frame_s = cap.read()
+            if ret_s and frame_s is not None and do_unblur:
+                b_blur, b_box, b_ratio = detect_unblur_box(frame_s, target_res=(master_w, master_h))
+                if b_blur:
+                    has_blur = True
+                    detected_boxes.append((b_box, b_ratio))
+
+        if has_blur and detected_boxes:
+            min_bw = min(b[0][2] for b in detected_boxes)
+            min_bh = min(b[0][3] for b in detected_boxes)
+            cx, cy = master_w // 2, master_h // 2
+            x1 = max(0, ((cx - min_bw // 2) // 2) * 2)
+            y1 = max(0, ((cy - min_bh // 2) // 2) * 2)
+            box_master = (x1, y1, min_bw, min_bh)
+            ratio = min_bw / float(min_bh)
+            if ratio < 0.65:
+                aspect_ratio = "9:16"
+            elif ratio < 0.88:
+                aspect_ratio = "4:5"
+            elif ratio < 1.15:
+                aspect_ratio = "1:1"
+            elif ratio < 1.45:
+                aspect_ratio = "4:3"
+            else:
+                aspect_ratio = "16:9"
         else:
             aspect_ratio = "16:9" if (master_w / master_h >= 1.5) else "9:16"
             box_master = (0, 0, master_w, master_h)
@@ -323,7 +437,7 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             "aspect_ratio": aspect_ratio
         })
 
-    # 3. Incident Grouping & Reframe Split Detection
+    # 3. Incident Grouping & Continuous Action Unification
     incidents = []
     current_incident_id = 1
     
@@ -340,25 +454,41 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         prev = incidents[-1]
         corr = float(cv2.compareHist(prev["hist"], s["hist"], cv2.HISTCMP_CORREL)) if (prev["hist"] is not None and s["hist"] is not None) else 0.0
         is_same_incident = (corr >= 0.65)
-        
-        box_diff_ratio = abs(prev["box"][2] - s["box"][2]) / float(max(prev["box"][2], 1))
-        framing_changed = (prev["aspect_ratio"] != s["aspect_ratio"]) or (box_diff_ratio > 0.18)
+        if not is_same_incident and (corr >= 0.30):
+            inl = get_geometric_inliers(prev.get("mid_frame"), s.get("mid_frame"))
+            if inl >= 14:
+                is_same_incident = True
         
         if is_same_incident:
-            if not framing_changed:
-                prev["raw_end"] = s["raw_end"]
-                prev["raw_end_fn"] = s["raw_end_fn"]
-                prev["dur"] = round(prev["raw_end"] - prev["raw_start"], 2)
-                prev["hist"] = s["hist"]
-                prev["mid_frame"] = s["mid_frame"]
-                continue
-            else:
-                s["incident_id"] = prev["incident_id"]
-                s["shot_index"] = prev.get("shot_index", 1) + 1
-                s["is_continuation"] = True
-                s["continuation_of"] = f"{pfx}{len(incidents):03d}.mp4"
-                s["variation_type"] = "reframe_or_zoom"
-                incidents.append(s)
+            prev["raw_end"] = s["raw_end"]
+            prev["raw_end_fn"] = s["raw_end_fn"]
+            prev["dur"] = round(prev["raw_end"] - prev["raw_start"], 2)
+            prev["hist"] = s["hist"]
+            prev["mid_frame"] = s["mid_frame"]
+            if prev["has_blur"] or s["has_blur"]:
+                prev["has_blur"] = True
+                bw_prev = prev["box"][2] if prev["has_blur"] else master_w
+                bh_prev = prev["box"][3] if prev["has_blur"] else master_h
+                bw_curr = s["box"][2] if s["has_blur"] else master_w
+                bh_curr = s["box"][3] if s["has_blur"] else master_h
+                min_bw = min(bw_prev, bw_curr)
+                min_bh = min(bh_prev, bh_curr)
+                cx, cy = master_w // 2, master_h // 2
+                x1 = max(0, ((cx - min_bw // 2) // 2) * 2)
+                y1 = max(0, ((cy - min_bh // 2) // 2) * 2)
+                prev["box"] = (x1, y1, min_bw, min_bh)
+                ratio = min_bw / float(min_bh)
+                if ratio < 0.65:
+                    prev["aspect_ratio"] = "9:16"
+                elif ratio < 0.88:
+                    prev["aspect_ratio"] = "4:5"
+                elif ratio < 1.15:
+                    prev["aspect_ratio"] = "1:1"
+                elif ratio < 1.45:
+                    prev["aspect_ratio"] = "4:3"
+                else:
+                    prev["aspect_ratio"] = "16:9"
+            continue
         else:
             current_incident_id += 1
             s["incident_id"] = current_incident_id
@@ -481,13 +611,13 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         
         if is_intra_dup and move_duplicates:
             target_dir = dup_dir
-            folder_tag = "_duplicates"
+            folder_tag = "duplicates/intra"
         elif is_cross_dup and move_duplicates:
             target_dir = cross_dup_dir
-            folder_tag = "_cross_duplicates"
+            folder_tag = "duplicates/cross"
         else:
-            target_dir = out_dir
-            folder_tag = "main"
+            target_dir = scenes_dir
+            folder_tag = "scenes"
             
         out_path = os.path.join(target_dir, file_name)
         strip_file_name = f"{stem}_strip.jpg"
@@ -566,33 +696,37 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
     # Release VideoCapture handle once all keyframes, unblur, and filmstrips are finished
     cap.release()
 
-    # 7. Hardware Export
-    print(f"\n[Clean-Cut Milestone 3] Exporting {len(final_scenes)} clean clips via {encoder}...")
-    for item in final_scenes:
+    # 7. Hardware Export (Parallel Multi-Worker Engine)
+    print(f"\n[Clean-Cut Milestone 3] Exporting {len(final_scenes)} clean clips via {encoder} (Parallel x4)...")
+    
+    def export_clip(item):
         cb = item["crop_box"]
         filters = []
         if item["has_blur"]:
             filters.append(f"crop={cb['w']}:{cb['h']}:{cb['x']}:{cb['y']}")
             
+        safe_start = item["start_time"] + 0.12 if item["duration"] > 0.8 else item["start_time"]
+        safe_end = item["end_time"] - 0.12 if item["duration"] > 0.8 else item["end_time"]
+        safe_dur = max(0.2, safe_end - safe_start)
+
         cmd = ["ffmpeg", "-y"]
         if "nvenc" in encoder:
             cmd.extend(["-hwaccel", "cuda"])
         cmd.extend([
-            "-ss", f"{item['seek_time']:.5f}",
-            "-i", real_video,
-            "-t", f"{item['duration']:.5f}"
+            "-ss", f"{safe_start:.3f}",
+            "-t", f"{safe_dur:.3f}",
+            "-i", real_video
         ])
         
         if filters:
             cmd.extend(["-vf", ",".join(filters)])
             
-        fade_d = min(0.015, item["duration"] / 4.0)
-        af_fade = f"afade=t=in:st=0:d={fade_d:.3f},afade=t=out:st={max(0.0, item['duration']-fade_d):.3f}:d={fade_d:.3f}"
+        fade_d = min(0.015, safe_dur / 4.0)
+        af_fade = f"afade=t=in:st=0:d={fade_d:.3f},afade=t=out:st={max(0.0, safe_dur-fade_d):.3f}:d={fade_d:.3f}"
         
         cmd.extend([
             "-af", af_fade,
             "-c:v", encoder,
-            "-preset", "p4" if "nvenc" in encoder else "medium",
             "-c:a", "aac",
             "-b:a", "192k",
             item["file_path"]
@@ -607,7 +741,10 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         elif item["is_continuation"]:
             tag_str = f" [Reframe linked to Inc #{item['incident_id']}]"
             
-        print(f"    ✓ [{item['scene_id']:02d}] {item['file_name']} ({item['duration']}s, {item['aspect_ratio']}, Peak @ {item['temporal_landmarks']['action_peak_rel_sec']}s){tag_str}")
+        print(f"    ✓ [{item['scene_id']:02d}] {item['file_name']} ({safe_dur:.2f}s, {item['aspect_ratio']}, Peak @ {item['temporal_landmarks']['action_peak_rel_sec']}s){tag_str}", flush=True)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        list(executor.map(export_clip, final_scenes))
 
     # 8. Update Portable Library Index
     if new_lib_entries:
@@ -689,12 +826,20 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             return o.tolist()
         return str(o)
 
-    manifest_path = os.path.join(out_dir, "scenes_context.json")
+    manifest_path = os.path.join(manifest_dir, "scenes_context.json")
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(context_manifest, f, indent=2, ensure_ascii=False, default=json_default)
         
+    # Also mirror at root of out_dir for quick CLI access
+    root_manifest = os.path.join(out_dir, "scenes_context.json")
+    try:
+        shutil.copy2(manifest_path, root_manifest)
+    except Exception:
+        pass
+        
     print(f"\n[Clean-Cut Execution Succeeded]")
-    print(f"  ✓ Context manifest ready at: {manifest_path}")
+    print(f"  ✓ Context manifest ready at: {manifest_path} (mirrored to root)")
+    print(f"  ✓ Clean footage saved in: {scenes_dir}")
     print(f"  ✓ Visual filmstrips saved in: {thumb_dir}")
 
     if multi_shot_incidents:
