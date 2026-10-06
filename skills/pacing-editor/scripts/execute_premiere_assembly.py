@@ -42,16 +42,48 @@ def run_extendscript(script_str, timeout_sec=60):
 
     raise TimeoutError(f"Premiere CEP bridge timed out after {timeout_sec}s")
 
-def assemble_sequence(manifest_path, target_bin="Scenes"):
+def assemble_sequence(manifest_path, target_bin="Scenes", target_duration=None):
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest = json.load(f)
 
     v1_clips = manifest.get("tracks", {}).get("V1", [])
-    if not v1_clips:
-        raise ValueError("No V1 clips found in manifest")
+    if not v1_clips and "scenes" in manifest:
+        v1_clips = []
+        t_in = 0.0
+        for s in manifest.get("scenes", []):
+            dur = float(s.get("duration", 2.0))
+            if target_duration and t_in >= target_duration:
+                break
+            v1_clips.append({
+                "file_path": s.get("file_path"),
+                "timeline_in": round(t_in, 3),
+                "duration": dur,
+                "source_in": 0.0,
+                "source_out": dur,
+                "climax_marker": round(t_in + s.get("temporal_landmarks", {}).get("action_peak_rel_sec", dur * 0.5), 3),
+                "narrative_role": s.get("aspect_ratio", "Action"),
+                "interest_score": 80.0
+            })
+            t_in += dur
+        tot_dur = t_in
+    elif v1_clips:
+        if target_duration:
+            filtered = []
+            cur_dur = 0.0
+            for c in v1_clips:
+                dur = float(c.get("duration", 2.0))
+                if cur_dur >= target_duration:
+                    break
+                filtered.append(c)
+                cur_dur += dur
+            v1_clips = filtered
+            tot_dur = cur_dur
+        else:
+            tot_dur = manifest.get("total_duration_seconds", sum(c.get("duration", 0) for c in v1_clips))
+    else:
+        raise ValueError("No V1 clips or scenes found in manifest")
 
-    tot_dur = manifest.get("total_duration_seconds", 0)
-    print(f"🎬 [Assembly Plan] Clips: {len(v1_clips)} | Duration: {tot_dur}s ({tot_dur/60:.2f} min)")
+    print(f"🎬 [Assembly Plan] Clips: {len(v1_clips)} | Duration: {tot_dur:.2f}s ({tot_dur/60:.2f} min)")
 
     # 1. Collect all unique file paths
     unique_paths = sorted(list(set(c["file_path"] for c in v1_clips)))
@@ -156,21 +188,22 @@ def assemble_sequence(manifest_path, target_bin="Scenes"):
             item.clearOutPoint();
             var mediaMax = item.getOutPoint().seconds;
 
-            var reqIn = (s.sourceIn !== null) ? s.sourceIn : 0.0;
-            var reqOut = (s.sourceOut !== null) ? s.sourceOut : mediaMax;
+            var reqIn = (s.sourceIn !== null && s.sourceIn !== undefined) ? s.sourceIn : 0.0;
+            var reqOut = (s.sourceOut !== null && s.sourceOut !== undefined) ? s.sourceOut : mediaMax;
 
-            // Clamp sourceIn and sourceOut strictly within [0.0, mediaMax]
-            var srcIn = Math.max(0.0, Math.min(reqIn, mediaMax - 0.1));
-            var srcOut = Math.min(mediaMax, Math.max(srcIn + 0.1, reqOut));
-
-            try {{
-                item.setInPoint(srcIn, 4);
-                item.setOutPoint(srcOut, 4);
-            }} catch (e1) {{
+            // Only set sub-clip in/out if custom sub-trim was explicitly requested
+            if (reqIn > 0.05 || reqOut < mediaMax - 0.05) {{
+                var srcIn = Math.max(0.0, Math.min(reqIn, mediaMax - 0.1));
+                var srcOut = Math.min(mediaMax, Math.max(srcIn + 0.1, reqOut));
                 try {{
-                    item.setInPoint(srcIn);
-                    item.setOutPoint(srcOut);
-                }} catch (e2) {{}}
+                    item.setInPoint(srcIn, 4);
+                    item.setOutPoint(srcOut, 4);
+                }} catch (e1) {{
+                    try {{
+                        item.setInPoint(srcIn);
+                        item.setOutPoint(srcOut);
+                    }} catch (e2) {{}}
+                }}
             }}
 
             var clipStart = currentTime;
@@ -178,12 +211,20 @@ def assemble_sequence(manifest_path, target_bin="Scenes"):
             placed++;
 
             // Snap currentTime to exact end of newly placed clip (guarantees mathematically 0 frame gaps)
-            var numPlaced = vTrack.clips.numItems;
-            if (numPlaced > 0) {{
-                var lastPlaced = vTrack.clips[numPlaced - 1];
-                currentTime = lastPlaced.end.seconds;
+            var placedClip = null;
+            for (var ci = vTrack.clips.numItems - 1; ci >= 0; ci--) {{
+                var cand = vTrack.clips[ci];
+                if (cand && Math.abs(cand.start.seconds - clipStart) < 0.08) {{
+                    placedClip = cand;
+                    break;
+                }}
+            }}
+            if (placedClip) {{
+                currentTime = placedClip.end.seconds;
+            }} else if (vTrack.clips.numItems > 0) {{
+                currentTime = vTrack.clips[vTrack.clips.numItems - 1].end.seconds;
             }} else {{
-                currentTime += (srcOut - srcIn);
+                currentTime += mediaMax;
             }}
 
             s.actualStart = clipStart;
@@ -243,5 +284,6 @@ def assemble_sequence(manifest_path, target_bin="Scenes"):
     return True
 
 if __name__ == "__main__":
-    man = "output_clean_cut/manifests/Sequence 03_manifest.json"
-    assemble_sequence(man, target_bin="Scenes")
+    man = sys.argv[1] if len(sys.argv) > 1 else "output_clean_cut/scenes_context.json"
+    target_bin = sys.argv[2] if len(sys.argv) > 2 else "Scenes"
+    assemble_sequence(man, target_bin=target_bin)

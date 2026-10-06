@@ -806,9 +806,8 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         if item["has_blur"]:
             filters.append(f"crop={cb['w']}:{cb['h']}:{cb['x']}:{cb['y']}")
             
-        safe_start = item["start_time"] + 0.12 if item["duration"] > 0.8 else item["start_time"]
-        safe_end = item["end_time"] - 0.12 if item["duration"] > 0.8 else item["end_time"]
-        safe_dur = max(0.2, safe_end - safe_start)
+        safe_start = item["start_time"]
+        safe_dur = max(0.2, item["duration"])
 
         cmd = ["ffmpeg", "-y"]
         if "nvenc" in encoder:
