@@ -1,3 +1,52 @@
 {
-  "clips": []
+  "clips": [
+    {
+      "source_video": "clean_cut_out",
+      "file_name": "dailycam_18_proxy240p.mp4",
+      "duration": 1755.0,
+      "aspect_ratio": "9:16",
+      "hash_orig": 11473566738794073287,
+      "hash_flip": 14586905448945523098
+    },
+    {
+      "source_video": "clean_cut_out",
+      "file_name": "scene_001.mp4",
+      "duration": 10.07,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13903906206723844010,
+      "hash_flip": 10782123635985903871
+    },
+    {
+      "source_video": "clean_cut_out",
+      "file_name": "scene_002.mp4",
+      "duration": 11.5,
+      "aspect_ratio": "9:16",
+      "hash_orig": 11669070780980260032,
+      "hash_flip": 17628649533235968405
+    },
+    {
+      "source_video": "clean_cut_out",
+      "file_name": "scene_003.mp4",
+      "duration": 5.43,
+      "aspect_ratio": "9:16",
+      "hash_orig": 13223497923099710058,
+      "hash_flip": 16345278395911505727
+    },
+    {
+      "source_video": "clean_cut_out",
+      "file_name": "scene_004.mp4",
+      "duration": 7.9,
+      "aspect_ratio": "1:1",
+      "hash_orig": 11236821599427019787,
+      "hash_flip": 14890132786590489050
+    },
+    {
+      "source_video": "clean_cut_out",
+      "file_name": "scene_005.mp4",
+      "duration": 2.37,
+      "aspect_ratio": "9:16",
+      "hash_orig": 15308911300757239056,
+      "hash_flip": 9448966442282050119
+    }
+  ]
 }

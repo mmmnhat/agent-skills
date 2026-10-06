@@ -32,23 +32,22 @@ def resolve_zone_box(zone_name, width, height, custom_box=None):
     """
     Converts relative zone preset or custom input to integer pixel box [x, y, w, h].
     """
-    if zone_name == "custom" and custom_box is not None:
-        if len(custom_box) == 4:
-            x, y, w, h = custom_box
-            # If normalized (0.0 to 1.0), scale to pixel resolution
-            if 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0 and 0.0 < w <= 1.0 and 0.0 < h <= 1.0:
-                x = int(x * width)
-                y = int(y * height)
-                w = int(w * width)
-                h = int(h * height)
-            else:
-                x, y, w, h = int(x), int(y), int(w), int(h)
-            # Clamp to frame bounds
-            x = max(0, min(x, width - 10))
-            y = max(0, min(y, height - 10))
-            w = max(10, min(w, width - x))
-            h = max(10, min(h, height - y))
-            return [x, y, w, h]
+    if custom_box is not None and len(custom_box) == 4:
+        x, y, w, h = custom_box
+        # If normalized (0.0 to 1.0), scale to pixel resolution
+        if 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0 and 0.0 < w <= 1.0 and 0.0 < h <= 1.0:
+            x = int(x * width)
+            y = int(y * height)
+            w = int(w * width)
+            h = int(h * height)
+        else:
+            x, y, w, h = int(x), int(y), int(w), int(h)
+        # Clamp to frame bounds
+        x = max(0, min(x, width - 10))
+        y = max(0, min(y, height - 10))
+        w = max(10, min(w, width - x))
+        h = max(10, min(h, height - y))
+        return [x, y, w, h]
 
     presets = CONFIG.get("preset_zones", {})
     if zone_name in presets and "relative_box" in presets[zone_name]:

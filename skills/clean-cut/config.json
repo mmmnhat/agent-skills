@@ -1,5 +1,5 @@
 {
-  "output_dir": "E:\\test-dung-ai\\output_clean_cut_18",
+  "output_dir": "E:\\test-dung-ai\\test_skills_run\\clean_cut_out",
   "prefix": "scene_",
   "unblur_enabled": true,
   "min_scene_duration_sec": 1.5,

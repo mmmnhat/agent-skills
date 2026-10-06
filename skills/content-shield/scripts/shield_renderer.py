@@ -45,11 +45,12 @@ def build_filter_graph(mode, box, width, height):
         return f"delogo=x={delogo_x}:y={delogo_y}:w={delogo_w}:h={delogo_h}:show=0"
 
     elif mode == "gaussian_blur":
-        return f"[0:v]crop={w}:{h}:{x}:{y},boxblur=luma_radius=20:luma_power=3[b];[0:v][b]overlay={x}:{y}"
+        safe_radius = max(1, min(20, (min(w, h) // 2) - 1))
+        return f"[0:v]crop={w}:{h}:{x}:{y},boxblur=luma_radius={safe_radius}:luma_power=3[b];[0:v][b]overlay={x}:{y}"
 
     elif mode == "mosaic":
-        # Mosaic downsamples the ROI by 16x using nearest neighbor then upsamples
-        return f"[0:v]crop={w}:{h}:{x}:{y},scale=iw/16:ih/16:flags=neighbor,scale={w}:{h}:flags=neighbor[m];[0:v][m]overlay={x}:{y}"
+        factor = max(2, min(16, min(w, h) // 4))
+        return f"[0:v]crop={w}:{h}:{x}:{y},scale=iw/{factor}:ih/{factor}:flags=neighbor,scale={w}:{h}:flags=neighbor[m];[0:v][m]overlay={x}:{y}"
 
     elif mode == "solid_mask":
         return f"drawbox=x={x}:y={y}:w={w}:h={h}:color=black@1.0:t=fill"
