@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
 """
-Pacing & Speed Ramping Engine
-Analyzes scenes, computes dynamic retention curves, allocates timeline slots on Track V1,
-and coordinates automated sound design (SFX on A2, BGM on A3).
+Pacing & Speed Ramping Engine (v2.0 W-Curve & Sequential Edition)
+Implements:
+1. Multi-Criteria Interest Scoring: S(c) = 0.40 M(c) + 0.35 N(c) + 0.25 A(c)
+2. Incident Bundle Preservation: Groups multi-angle & zoom reframe shots atomically
+3. Psychological W-Curve Narrative Reordering & Duration Target Fitting
+4. Hard Fast-Cut Boundary Calculation
+5. Studio 5-Track Sound Design Layout:
+   - V1: Video
+   - A1: Original Video Clip Audio
+   - A2: [BLANK] RESERVED EXCLUSIVELY FOR VOICEOVER
+   - A3: Transition SFX (Whoosh synced to cuts)
+   - A4: Climax SFX (Punch / Impact synced to Action Peaks)
+   - A5: Ducked BGM (-12dB during climax hits)
 """
 import os
 import sys
@@ -32,9 +42,235 @@ def load_config():
 
 CONFIG = load_config()
 
-def generate_pacing_plan(scenes_input, sequence_name="Pacing_Master", platform="reels_shorts", add_sfx=True, add_bgm=True):
+# --- 1. Multi-Criteria Scoring & Metrics ---
+
+def calculate_interest_score(clip):
     """
-    Constructs a full timeline manifest from scenes_context.json or list of clips.
+    Computes S(c) = 0.40 * M(c) + 0.35 * N(c) + 0.25 * A(c)
+    """
+    landmarks = clip.get("temporal_landmarks") or clip.get("motion_landmarks") or {}
+    
+    # 1. Motion Score M(c) in [0, 100]
+    motion_val = landmarks.get("peak_motion_diff")
+    if motion_val is not None:
+        m_score = min(100.0, (float(motion_val) / 45.0) * 100.0)
+    else:
+        # Fallback based on phases count or action peak presence
+        phases = landmarks.get("phases", {})
+        if phases:
+            m_score = 80.0 if "climax" in phases else 65.0
+        else:
+            m_score = 70.0
+            
+    # 2. Narrative Arc Score N(c) in [0, 100]
+    pacing_rec = landmarks.get("pacing_recommendations") or {}
+    arc_type = pacing_rec.get("narrative_arc", "complete_arc")
+    if arc_type == "complete_arc":
+        n_score = 100.0
+    elif "truncated_tail" in arc_type:
+        n_score = 85.0
+    elif "truncated_head" in arc_type:
+        n_score = 70.0
+    elif "incomplete" in arc_type or "fragment" in arc_type:
+        n_score = 50.0
+    else:
+        n_score = 85.0
+        
+    # 3. Audio Transient Score A(c) in [0, 100]
+    audio_info = clip.get("audio") or {}
+    snap_delta = abs(float(audio_info.get("start_snap_delta", 0.0)))
+    if snap_delta < 0.15:
+        a_score = 85.0
+    elif snap_delta < 0.30:
+        a_score = 75.0
+    else:
+        a_score = 65.0
+        
+    score = round(0.40 * m_score + 0.35 * n_score + 0.25 * a_score, 2)
+    return score
+
+def bundle_incidents(scenes):
+    """
+    Groups scenes into atomic incident bundles based on incident_id or continuation links.
+    Guarantees that sub-shots of the same incident are never split across the timeline.
+    """
+    bundle_map = {}
+    ordered_bundle_ids = []
+    
+    for i, sc in enumerate(scenes):
+        inc_id = sc.get("incident_id")
+        if inc_id is None:
+            inc_id = f"single_{i+1:03d}"
+            
+        if inc_id not in bundle_map:
+            bundle_map[inc_id] = {
+                "incident_id": inc_id,
+                "shots": [],
+                "scores": [],
+                "bundle_score": 0.0,
+                "total_raw_duration": 0.0,
+                "fast_cut_duration": 0.0
+            }
+            ordered_bundle_ids.append(inc_id)
+            
+        s_score = calculate_interest_score(sc)
+        sc["interest_score"] = s_score
+        b = bundle_map[inc_id]
+        b["shots"].append(sc)
+        b["scores"].append(s_score)
+        
+        raw_d = float(sc.get("duration") or sc.get("duration_sec") or 3.0)
+        b["total_raw_duration"] += raw_d
+        
+    # Calculate aggregate bundle score S(I) and fast-cut duration
+    bundles = []
+    for inc_id in ordered_bundle_ids:
+        b = bundle_map[inc_id]
+        scores = b["scores"]
+        max_s = max(scores) if scores else 70.0
+        residual_sum = sum(s for s in scores if s != max_s)
+        b["bundle_score"] = round(max_s + 0.10 * residual_sum, 2)
+        
+        # Estimate fast cut duration for the bundle
+        fc_dur = 0.0
+        for sc in b["shots"]:
+            in_p, out_p = calculate_hard_fast_cut(sc)
+            sc["fast_cut_in"] = in_p
+            sc["fast_cut_out"] = out_p
+            sc["fast_cut_dur"] = round(out_p - in_p, 3)
+            fc_dur += sc["fast_cut_dur"]
+        b["fast_cut_duration"] = round(fc_dur, 2)
+        bundles.append(b)
+        
+    return bundles
+
+def calculate_hard_fast_cut(scene, delta_pre=1.0, delta_post=1.1, min_dur=2.0, max_dur=3.5):
+    """
+    Computes tight Premiere Pro In/Out points locking onto the dramatic peak:
+    source_in = max(0.0, climax_time - delta_pre)
+    source_out = min(duration, climax_time + delta_post)
+    """
+    raw_dur = float(scene.get("duration") or scene.get("duration_sec") or 3.0)
+    landmarks = scene.get("temporal_landmarks") or scene.get("motion_landmarks") or {}
+    climax_rel = float(landmarks.get("action_peak_rel_sec") or landmarks.get("climax_sec") or (raw_dur * 0.55))
+    
+    # If the clip is already very short (<= 2.5s), keep entire clip
+    if raw_dur <= min_dur:
+        return 0.0, raw_dur
+        
+    src_in = max(0.0, climax_rel - delta_pre)
+    src_out = min(raw_dur, climax_rel + delta_post)
+    
+    # Ensure minimum brisk length
+    cut_len = src_out - src_in
+    if cut_len < min_dur:
+        needed = min_dur - cut_len
+        src_in = max(0.0, src_in - needed / 2.0)
+        src_out = min(raw_dur, src_out + needed / 2.0)
+        
+    # Cap at max fast-cut duration
+    if (src_out - src_in) > max_dur:
+        excess = (src_out - src_in) - max_dur
+        src_in += excess * 0.4
+        src_out -= excess * 0.6
+        
+    return round(src_in, 3), round(src_out, 3)
+
+# --- 2. W-Curve Dynamic Narrative Reordering ---
+
+def map_w_curve(bundles, target_duration=None):
+    """
+    Organizes incident bundles into a psychological W-Curve:
+    Slot 1: Hook (Peak 1 - Rank 2)
+    Slot 2: Valley 1 (Context / Dip 1)
+    Slot 3: Mid-Peak (Peak 2 - Rank 3)
+    Slot 4: Valley 2 (Suspense / Dip 2)
+    Slot 5: Grand Finale (Peak 3 - Rank 1 Ultimate Climax)
+    """
+    # 1. Target Duration Fitting
+    if target_duration and target_duration > 0:
+        # Sort by bundle score descending
+        sorted_by_score = sorted(bundles, key=lambda b: b["bundle_score"], reverse=True)
+        selected = []
+        accum_dur = 0.0
+        max_dur_allowed = target_duration + 2.5
+        
+        for b in sorted_by_score:
+            b_dur = b["fast_cut_duration"]
+            if (accum_dur + b_dur) <= max_dur_allowed or not selected:
+                selected.append(b)
+                accum_dur += b_dur
+            if accum_dur >= target_duration:
+                break
+        working_bundles = selected
+    else:
+        working_bundles = list(bundles)
+        
+    n = len(working_bundles)
+    if n <= 2:
+        # Simple descending or as-is
+        return sorted(working_bundles, key=lambda b: b["bundle_score"], reverse=True)
+        
+    # Rank bundles by score descending
+    ranked = sorted(working_bundles, key=lambda b: b["bundle_score"], reverse=True)
+    
+    # Map into W-Curve slots:
+    # Ranked index: 0 = #1, 1 = #2, 2 = #3, 3 = #4, ...
+    rank_1 = ranked[0]  # Grand Finale
+    rank_2 = ranked[1]  # Hook (Peak 1)
+    rank_3 = ranked[2] if n >= 3 else None  # Mid-Peak (Peak 2)
+    
+    remaining = ranked[3:] if n >= 4 else []
+    # Split remaining into Valley 1 and Valley 2
+    half = len(remaining) // 2
+    valley_1 = remaining[:half] if half > 0 else (remaining[:1] if remaining else [])
+    valley_2 = remaining[half:] if half > 0 else (remaining[1:] if len(remaining) > 1 else [])
+    
+    w_curve_ordered = []
+    
+    # Slot 1: Hook (Peak 1)
+    rank_2["w_curve_slot"] = "Hook (Peak 1)"
+    w_curve_ordered.append(rank_2)
+    
+    # Slot 2: Valley 1 (Context)
+    for b in valley_1:
+        b["w_curve_slot"] = "Valley 1 (Context)"
+        w_curve_ordered.append(b)
+        
+    # Slot 3: Mid-Peak (Peak 2)
+    if rank_3:
+        rank_3["w_curve_slot"] = "Mid-Peak (Peak 2)"
+        w_curve_ordered.append(rank_3)
+        
+    # Slot 4: Valley 2 (Suspense)
+    for b in valley_2:
+        b["w_curve_slot"] = "Valley 2 (Suspense)"
+        w_curve_ordered.append(b)
+        
+    # Slot 5: Grand Finale (Peak 3)
+    rank_1["w_curve_slot"] = "Grand Finale (Peak 3)"
+    w_curve_ordered.append(rank_1)
+    
+    return w_curve_ordered
+
+# --- 3. Master Pacing Plan Generator ---
+
+def generate_pacing_plan(
+    scenes_input,
+    sequence_name="Pacing_Master",
+    platform="reels_shorts",
+    mode="sequential",
+    target_duration=None,
+    cut_mode="fast-cut",
+    add_sfx=True,
+    add_bgm=True
+):
+    """
+    Constructs the complete 5-Track Timeline Manifest.
+    Modes:
+      - 'sequential': Preserves 100% of input sequence. Applies hard fast-cut trimming.
+      - 'w-curve': Evaluates Interest Score, preserves incident bundles, fits target-duration,
+                   and reorders into W-curve narrative topology.
     """
     platform_cfg = CONFIG.get("target_platforms", {}).get(platform, {
         "aspect_ratio": "9:16",
@@ -60,97 +296,141 @@ def generate_pacing_plan(scenes_input, sequence_name="Pacing_Master", platform="
     if not scenes:
         raise ValueError("No valid scenes provided to pacing engine.")
 
+    # 1. Bundle multi-shot incidents
+    bundles = bundle_incidents(scenes)
+
+    # 2. Reorder or filter based on mode
+    if mode == "w-curve":
+        final_bundles = map_w_curve(bundles, target_duration=target_duration)
+    else:
+        # Sequential mode: Keep chronological bundle order, optionally apply target duration
+        if target_duration and target_duration > 0:
+            selected = []
+            accum = 0.0
+            for b in bundles:
+                selected.append(b)
+                accum += b["fast_cut_duration"]
+                if accum >= target_duration:
+                    break
+            final_bundles = selected
+        else:
+            final_bundles = bundles
+
+    # 3. Flatten bundles to timeline clips
+    timeline_scenes = []
+    for b in final_bundles:
+        slot_label = b.get("w_curve_slot", "Sequential Flow")
+        for sc in b["shots"]:
+            sc["narrative_role"] = slot_label
+            sc["bundle_id"] = b["incident_id"]
+            timeline_scenes.append(sc)
+
+    # 4. Construct Studio 5-Track Timeline Layout
     v1_track = []
-    a2_track = []
-    a3_track = []
+    a1_track = []
+    a2_track = []  # RESERVED BLANK FOR VOICEOVER
+    a3_track = []  # Transition SFX
+    a4_track = []  # Climax SFX
+    a5_track = []  # Ducked BGM
 
     current_timeline_time = 0.0
 
-    # Cache transition SFX and Climax SFX
     whoosh_asset = get_best_sfx(CONFIG.get("sound_design", {}).get("transition_sfx_intent", "whoosh chuyen canh"))
     impact_asset = get_best_sfx(CONFIG.get("sound_design", {}).get("climax_sfx_intent", "impact boom"))
 
-    for i, sc in enumerate(scenes):
+    for i, sc in enumerate(timeline_scenes):
         clip_path = sc.get("clip_path") or sc.get("file_path")
         if not clip_path or not os.path.exists(clip_path):
             continue
 
         raw_dur = float(sc.get("duration") or sc.get("duration_sec") or 3.0)
-        max_dur = platform_cfg.get("max_clip_duration_sec", 4.5)
-        # Cap duration for maximum short-form retention
-        source_in = 0.0
-        source_out = min(raw_dur, max_dur)
-        effective_dur = source_out - source_in
-
-        # Determine motion landmarks
-        landmarks = sc.get("temporal_landmarks") or sc.get("motion_landmarks") or {}
-        climax_rel = float(landmarks.get("action_peak_rel_sec") or landmarks.get("climax_sec") or (effective_dur * 0.55))
         
-        # Calculate speed ramping
-        climax_speed = platform_cfg.get("speed_ramp_climax", 0.5)
-        speed_curve = [
-            {"phase": "lead_in", "speed": 1.0, "duration_sec": round(climax_rel * 0.7, 2)},
-            {"phase": "climax", "speed": climax_speed, "duration_sec": round(climax_rel * 0.3 + 0.4, 2)},
-            {"phase": "recovery", "speed": 1.5, "duration_sec": round(max(0.2, effective_dur - climax_rel - 0.4), 2)}
-        ]
+        # Calculate In/Out boundaries
+        if cut_mode == "fast-cut":
+            src_in, src_out = calculate_hard_fast_cut(sc)
+        else:
+            src_in = 0.0
+            src_out = min(raw_dur, platform_cfg.get("max_clip_duration_sec", 4.5))
+            
+        effective_dur = round(src_out - src_in, 3)
+        landmarks = sc.get("temporal_landmarks") or sc.get("motion_landmarks") or {}
+        climax_raw = float(landmarks.get("action_peak_rel_sec") or landmarks.get("climax_sec") or (raw_dur * 0.55))
+        
+        # Climax relative to trimmed source_in
+        climax_trimmed = max(0.2, min(effective_dur - 0.2, climax_raw - src_in))
 
-        clip_timeline_in = current_timeline_time
-        # Duration on timeline with ramping approximation
-        timeline_clip_dur = round(effective_dur, 3)
-        clip_timeline_out = round(clip_timeline_in + timeline_clip_dur, 3)
-        climax_timeline_time = round(clip_timeline_in + climax_rel, 3)
+        clip_timeline_in = round(current_timeline_time, 3)
+        clip_timeline_out = round(clip_timeline_in + effective_dur, 3)
+        climax_timeline_time = round(clip_timeline_in + climax_trimmed, 3)
 
+        # Video Track (V1)
         v1_track.append({
             "clip_id": sc.get("scene_id", f"scene_{i+1:03d}"),
             "file_path": clip_path,
             "timeline_in": clip_timeline_in,
             "timeline_out": clip_timeline_out,
-            "source_in": source_in,
-            "source_out": source_out,
-            "speed_curve": speed_curve,
+            "source_in": src_in,
+            "source_out": src_out,
+            "duration": effective_dur,
+            "interest_score": sc.get("interest_score", 75.0),
+            "narrative_role": sc.get("narrative_role", "Sequential"),
+            "bundle_id": sc.get("bundle_id"),
+            "aspect_ratio": sc.get("aspect_ratio", "9:16"),
             "optical_flow": True,
             "climax_marker": climax_timeline_time
         })
 
-        # Add Audio Effects (A2)
+        # Track A1: Original Video Audio
+        a1_track.append({
+            "clip_id": f"audio_orig_{i+1:03d}",
+            "file_path": clip_path,
+            "timeline_in": clip_timeline_in,
+            "timeline_out": clip_timeline_out,
+            "source_in": src_in,
+            "source_out": src_out
+        })
+
         if add_sfx:
-            # 1. Transition Whoosh at edit cut (for all clips except very first)
+            # Track A3: Transition SFX (Whoosh at cut points, except clip 1)
             if i > 0 and whoosh_asset:
-                a2_track.append({
+                a3_track.append({
                     "sfx_id": f"whoosh_cut_{i:03d}",
                     "file_path": whoosh_asset["file_path"],
                     "role": "transition",
-                    "timeline_in": max(0.0, clip_timeline_in - 0.25),
-                    "volume_db": CONFIG.get("sound_design", {}).get("default_volumes", {}).get("sfx_db", -2.0)
+                    "timeline_in": max(0.0, clip_timeline_in - 0.20),
+                    "volume_db": CONFIG.get("sound_design", {}).get("default_volumes", {}).get("sfx_db", -3.0)
                 })
 
-            # 2. Climax Impact at action peak
+            # Track A4: Climax SFX (Punch / Impact at action peak)
             if impact_asset:
-                a2_track.append({
-                    "sfx_id": f"impact_climax_{i:03d}",
+                a4_track.append({
+                    "sfx_id": f"climax_hit_{i:03d}",
                     "file_path": impact_asset["file_path"],
                     "role": "climax_impact",
                     "timeline_in": climax_timeline_time,
-                    "volume_db": CONFIG.get("sound_design", {}).get("default_volumes", {}).get("sfx_db", -2.0)
+                    "volume_db": CONFIG.get("sound_design", {}).get("default_volumes", {}).get("sfx_db", -1.0)
                 })
 
         current_timeline_time = clip_timeline_out
 
-    # Add Background Music (A3)
+    # Track A5: Ducked Background Music
     if add_bgm and current_timeline_time > 0.0:
         bgm_asset = get_best_bgm()
         if bgm_asset:
-            a3_track.append({
+            a5_track.append({
                 "bgm_id": "master_bgm",
                 "file_path": bgm_asset["file_path"],
                 "timeline_in": 0.0,
                 "timeline_out": round(current_timeline_time, 3),
-                "ducked": True
+                "ducked_db": -12.0
             })
 
     manifest = {
         "sequence_name": sequence_name,
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "mode": mode,
+        "cut_mode": cut_mode,
+        "target_duration_requested": target_duration,
         "format": {
             "aspect_ratio": platform_cfg.get("aspect_ratio", "9:16"),
             "resolution": platform_cfg.get("resolution", [1080, 1920]),
@@ -158,10 +438,14 @@ def generate_pacing_plan(scenes_input, sequence_name="Pacing_Master", platform="
         },
         "total_duration_seconds": round(current_timeline_time, 3),
         "total_scenes": len(v1_track),
+        "total_incident_bundles": len(final_bundles),
         "tracks": {
             "V1": v1_track,
-            "A2": a2_track,
-            "A3": a3_track
+            "A1": a1_track,
+            "A2": a2_track,  # Reserved for Voiceover
+            "A3": a3_track,  # Transition SFX
+            "A4": a4_track,  # Climax SFX
+            "A5": a5_track   # Ducked BGM
         }
     }
     return manifest
