@@ -108,11 +108,6 @@ def assemble_sequence(manifest_path, target_bin="Scenes", target_duration=None):
     script = f"""
     try {{
         var root = app.project.rootItem;
-        var seq = app.project.activeSequence;
-        if (!seq) {{
-            return JSON.stringify({{ success: false, error: "No active sequence open in Premiere Pro" }});
-        }}
-
         // 1. Locate or create dedicated Bin
         var targetBin = null;
         for (var i = 0; i < root.children.numItems; i++) {{
@@ -134,6 +129,45 @@ def assemble_sequence(manifest_path, target_bin="Scenes", target_duration=None):
         for (var bi = 0; bi < targetBin.children.numItems; bi++) {{
             var bChild = targetBin.children[bi];
             binMap[bChild.name] = bChild;
+        }}
+
+        // Also sweep root: move any loose files into targetBin
+        for (var ri = 0; ri < root.children.numItems; ri++) {{
+            var rChild = root.children[ri];
+            if (rChild && rChild.type === 1 && binMap[rChild.name] === undefined) {{
+                try {{
+                    rChild.moveBin(targetBin);
+                    binMap[rChild.name] = rChild;
+                }} catch (me) {{}}
+            }}
+        }}
+
+        // 3.2 Ensure active sequence exists, or create one cleanly
+        var seq = app.project.activeSequence;
+        if (!seq && app.project.sequences.numSequences > 0) {{
+            seq = app.project.sequences[0];
+            try {{ app.project.openSequence(seq.sequenceID); }} catch (soErr) {{}}
+        }}
+        if (!seq) {{
+            var firstItem = null;
+            var specsList = {json.dumps(clip_specs)};
+            if (specsList.length > 0 && binMap[specsList[0].name]) {{
+                firstItem = binMap[specsList[0].name];
+            }}
+            if (!firstItem) {{
+                for (var bk in binMap) {{
+                    if (binMap[bk]) {{ firstItem = binMap[bk]; break; }}
+                }}
+            }}
+            if (firstItem) {{
+                seq = app.project.createNewSequenceFromClips("Sequence 04", [firstItem], targetBin);
+            }}
+            if (!seq) {{
+                seq = app.project.activeSequence;
+            }}
+        }}
+        if (!seq) {{
+            return JSON.stringify({{ success: false, error: "Could not find or create active sequence in Premiere Pro" }});
         }}
 
         // Also sweep root: move any loose files into targetBin
@@ -275,6 +309,10 @@ def assemble_sequence(manifest_path, target_bin="Scenes", target_duration=None):
     out = res.get("result", {})
     if isinstance(out, str):
         out = json.loads(out)
+
+    if not out.get("success"):
+        print(f"❌ ExtendScript Error: {out.get('error', 'Unknown error')}")
+        return False
 
     print(f"\n🎉 [Assembly Succeeded in {elapsed:.2f}s]")
     print(f"  ✓ Target Sequence : {out.get('sequenceName')}")
