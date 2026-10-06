@@ -245,8 +245,9 @@ def analyze_video(video_path, work_dir=None, min_content=15.0, adaptive=1.8, max
         for o in OFFS:
             need.add(min(N - 1, max(0, f + o)))
             
-    fd = os.path.join(W, "frames")
-    os.makedirs(fd, exist_ok=True)
+    frame_cache = {}
+    import threading
+    cache_lock = threading.Lock()
     
     wins = []
     for f in sorted(need):
@@ -258,9 +259,13 @@ def analyze_video(video_path, work_dir=None, min_content=15.0, adaptive=1.8, max
     done = [0]
     def grab(wn):
         a0, b0 = wn
+        local_frames = {}
         for k3, fr in enumerate(ff_window(ff, video, a0, b0 - a0 + 1, fps, SW, SH)):
-            if a0 + k3 in need:
-                cv2.imwrite(os.path.join(fd, f"{a0 + k3}.jpg"), fr, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            fn = a0 + k3
+            if fn in need:
+                local_frames[fn] = fr
+        with cache_lock:
+            frame_cache.update(local_frames)
         done[0] += 1
         if done[0] % 20 == 0:
             progress(W, "analyze-2/2", done[0], len(wins))
@@ -280,8 +285,7 @@ def analyze_video(video_path, work_dir=None, min_content=15.0, adaptive=1.8, max
     blank = np.zeros((SH, SW, 3), np.uint8)
     
     def img(fr):
-        im = cv2.imread(os.path.join(fd, f"{min(N - 1, max(0, fr))}.jpg"))
-        return blank if im is None else im
+        return frame_cache.get(min(N - 1, max(0, fr)), blank)
         
     num_sheets = math.ceil(len(meta) / PER)
     for p in range(0, len(meta), PER):
