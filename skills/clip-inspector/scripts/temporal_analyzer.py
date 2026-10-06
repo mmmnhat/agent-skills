@@ -8,13 +8,15 @@ import os
 import cv2
 import numpy as np
 
-def analyze_and_generate_filmstrip(cap, fps, start_sec, end_sec, out_strip_path=None, num_samples=12):
+def analyze_and_generate_filmstrip(cap, fps, start_sec, end_sec, out_strip_path=None, num_samples=12, crop_box=None):
     """
     Analyzes visual motion energy across [start_sec, end_sec] using an open `cap` handle,
     locates Action Peak, segments pacing phases, and stitches a 4-frame filmstrip.
+    crop_box: optional (x, y, w, h) in cap frame coordinates.
     """
     duration = max(0.5, end_sec - start_sec)
-    sample_times = np.linspace(start_sec, end_sec, num_samples)
+    margin = min(0.15, duration * 0.04)
+    sample_times = np.linspace(start_sec + margin, end_sec - margin, num_samples)
     
     prev_gray = None
     motion_scores = []
@@ -27,6 +29,11 @@ def analyze_and_generate_filmstrip(cap, fps, start_sec, end_sec, out_strip_path=
             motion_scores.append(0.0)
             continue
             
+        if crop_box:
+            cbx, cby, cbw, cbh = crop_box
+            if cbw > 10 and cbh > 10 and cby + cbh <= frame.shape[0] and cbx + cbw <= frame.shape[1]:
+                frame = frame[cby:cby+cbh, cbx:cbx+cbw]
+
         small = cv2.resize(frame, (160, 90), interpolation=cv2.INTER_AREA)
         gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
         
@@ -122,7 +129,7 @@ def analyze_and_generate_filmstrip(cap, fps, start_sec, end_sec, out_strip_path=
             t3 = start_sec + peak_rel_sec
         else:
             t3 = start_sec + (duration * 0.70)
-        t4 = start_sec + max(duration * 0.88, duration - 0.2)
+        t4 = start_sec + min(duration * 0.88, max(0.1, duration - 0.3))
         
         target_h = 240
         panels = []
@@ -139,9 +146,13 @@ def analyze_and_generate_filmstrip(cap, fps, start_sec, end_sec, out_strip_path=
             if not ret or frame is None:
                 panel = np.zeros((target_h, int(target_h * 16 / 9), 3), dtype=np.uint8)
             else:
+                if crop_box:
+                    cbx, cby, cbw, cbh = crop_box
+                    if cbw > 10 and cbh > 10 and cby + cbh <= frame.shape[0] and cbx + cbw <= frame.shape[1]:
+                        frame = frame[cby:cby+cbh, cbx:cbx+cbw]
                 h, w = frame.shape[:2]
                 scale = target_h / float(h)
-                new_w = int(w * scale)
+                new_w = max(10, int(w * scale))
                 panel = cv2.resize(frame, (new_w, target_h), interpolation=cv2.INTER_AREA)
                 
             cv2.rectangle(panel, (0, target_h - 26), (panel.shape[1], target_h), (20, 20, 20), -1)

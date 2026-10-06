@@ -319,6 +319,7 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             "hash_flip": h_flip,
             "has_blur": has_blur,
             "box": box_master,
+            "box_proxy": (pbx, pby, pbw, pbh),
             "aspect_ratio": aspect_ratio
         })
 
@@ -494,7 +495,8 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
         
         # Unified single-pass temporal analysis and filmstrip generation using existing cap handle
         action_peak_rel, phases, pacing_rec = analyze_and_generate_filmstrip(
-            cap, proxy_fps, s_exact, s_exact + final_dur, out_strip_path=strip_path
+            cap, proxy_fps, s_exact, s_exact + final_dur, out_strip_path=strip_path,
+            crop_box=inc.get("box_proxy") if inc.get("has_blur") else None
         )
         
         scene_info = {
