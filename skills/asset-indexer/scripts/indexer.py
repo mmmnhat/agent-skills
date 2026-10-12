@@ -18,21 +18,39 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+ROOT_LOCAL_CONFIG = Path(__file__).resolve().parent.parent.parent.parent / "config.local.json"
+
 def load_config():
-    cfg_path = Path(__file__).resolve().parent.parent / "config.json"
-    if cfg_path.exists():
-        try:
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {
+    cfg = {
         "asset_root": r"E:\Video Asset",
         "index_path": r"E:\Video Asset\asset_index.json",
         "supported_extensions": [".mp3", ".wav", ".m4a", ".mp4", ".mov", ".gif", ".png", ".jpg"],
         "max_workers": 16,
         "vibe_mappings": {}
     }
+    cfg_path = Path(__file__).resolve().parent.parent / "config.json"
+    if cfg_path.exists():
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg.update(json.load(f))
+        except Exception:
+            pass
+    if ROOT_LOCAL_CONFIG.exists():
+        try:
+            with open(ROOT_LOCAL_CONFIG, "r", encoding="utf-8") as f:
+                l_cfg = json.load(f)
+                ad = l_cfg.get("asset_directories", {})
+                root_cand = ad.get("asset_root") or ad.get("sfx_dir")
+                if root_cand:
+                    p = Path(root_cand)
+                    if p.name.lower() == "sfx":
+                        p = p.parent
+                    cfg["asset_root"] = str(p)
+                    cfg["index_path"] = str(p / "asset_index.json")
+                    cfg["memory_path"] = str(p / "asset_memory.json")
+        except Exception:
+            pass
+    return cfg
 
 def probe_metadata(file_path):
     """

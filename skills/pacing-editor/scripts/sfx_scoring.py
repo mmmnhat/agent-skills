@@ -14,12 +14,21 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-# Try to import search_engine from asset-indexer
-ASSET_INDEXER_DIR = Path(__file__).resolve().parent.parent.parent / "asset-indexer" / "scripts"
-if not ASSET_INDEXER_DIR.exists():
-    ASSET_INDEXER_DIR = Path(r"E:\.agents\skills\asset-indexer\scripts")
+# Dynamically resolve asset-indexer directory
+SKILL_ROOT = Path(__file__).resolve().parent.parent.parent
+ASSET_INDEXER_DIR = SKILL_ROOT / "asset-indexer" / "scripts"
 if str(ASSET_INDEXER_DIR) not in sys.path:
     sys.path.append(str(ASSET_INDEXER_DIR))
+
+# Resolve local config for custom asset directories
+LOCAL_CONFIG_PATH = SKILL_ROOT.parent / "config.local.json"
+LOCAL_CFG = {}
+if LOCAL_CONFIG_PATH.exists():
+    try:
+        with open(LOCAL_CONFIG_PATH, "r", encoding="utf-8") as f:
+            LOCAL_CFG = json.load(f)
+    except Exception:
+        pass
 
 try:
     from search_engine import search_assets
@@ -51,9 +60,10 @@ def get_best_sfx(intent, category="SFX", max_duration=3.0):
         except Exception:
             pass
 
-    # Fallback: scan E:\Video Asset\SFX directly
-    sfx_root = Path(r"E:\Video Asset\SFX")
-    if sfx_root.exists():
+    # Fallback: scan custom SFX directory directly
+    sfx_cand = LOCAL_CFG.get("asset_directories", {}).get("sfx_dir") or r"E:\Video Asset\SFX"
+    sfx_root = Path(sfx_cand) if sfx_cand else None
+    if sfx_root and sfx_root.exists():
         kw = intent.lower().split()[0]
         for f in sfx_root.rglob("*.mp3"):
             if kw in f.name.lower():
@@ -97,9 +107,10 @@ def get_best_bgm(mood="upbeat", max_duration=120.0):
         except Exception:
             pass
 
-    # Fallback to Music folder
-    music_root = Path(r"E:\Video Asset\Music")
-    if music_root.exists():
+    # Fallback to custom Music folder
+    music_cand = LOCAL_CFG.get("asset_directories", {}).get("bgm_dir") or r"E:\Video Asset\Music"
+    music_root = Path(music_cand) if music_cand else None
+    if music_root and music_root.exists():
         for f in music_root.rglob("*.*"):
             if f.suffix.lower() in [".mp3", ".wav", ".m4a"]:
                 return {

@@ -4,15 +4,30 @@ An end-to-end autonomous video editorial workflow and skill suite for Antigravit
 
 ---
 
-## ⚡ Cài Đặt 1 Bước Cho Máy Mới (1-Step Setup)
+## ⚡ Hướng Dẫn Cài Đặt Cho Máy Mới (1-Step Setup)
 
-Khi tải repo về máy mới, chỉ cần chạy 1 lệnh duy nhất:
+Để AI Agent trên bất kỳ máy nào (Windows, macOS, Linux) thực thi **chính xác 100% như trên máy lead**:
+
+### Cách 1: Đăng ký Toàn Cục (Khuyên dùng — Dùng được cho mọi project trên máy)
 ```bash
+git clone https://github.com/mmmnhat/agent-skills.git
+cd agent-skills
 python setup_env.py
 ```
-* **Tự động dò phần cứng:** Tự động chọn encoder mạnh nhất máy hỗ trợ (NVIDIA NVENC, Apple Silicon VideoToolbox, Intel QSV, hoặc CPU libx264).
-* **Cấu hình kho Asset:** Hỏi đường dẫn thư mục SFX & BGM nhạc nền riêng của bạn (hoặc Enter để bỏ qua nếu chưa có).
-* **Sinh file cấu hình an toàn:** Lưu vào `config.local.json` (được `.gitignore` bảo vệ, không bao giờ bị conflict khi `git pull`).
+* **Tự động dò phần cứng:** Tự chọn encoder tối ưu nhất (NVIDIA NVENC, Apple Silicon VideoToolbox, Intel QSV, hoặc CPU libx264).
+* **Cấu hình kho Asset:** Hỏi đường dẫn thư mục SFX & BGM của riêng bạn.
+* **Tự động đăng ký Skills toàn cục:** Tự ghi vào `~/.gemini/config/skills.json` để Antigravity nhận diện skills tại bất kỳ workspace nào mở trên máy.
+* **Đồng bộ đa nền tảng:** Tự động đồng bộ chỉ thị vào `AGENTS.md`, `GEMINI.md`, `CLAUDE.md` (Claude Code) và `.cursorrules` (Cursor AI).
+* **Sinh cấu hình an toàn:** Lưu vào `config.local.json` (được `.gitignore` bảo vệ, không bao giờ lo conflict khi `git pull`).
+
+### Cách 2: Nhúng Trực Tiếp Vào Dự Án Dựng Video (Per-Project)
+Nếu bạn có sẵn một thư mục video (ví dụ: `D:\MyVideoProject`):
+```bash
+cd D:\MyVideoProject
+git clone https://github.com/mmmnhat/agent-skills.git .agents
+python .agents/setup_env.py
+```
+Antigravity sẽ tự động nhận diện thư mục `.agents` làm customization root, kích hoạt ngay lập tức toàn bộ skills và chỉ thị Autonomous Video Editor cho dự án đó.
 
 ---
 

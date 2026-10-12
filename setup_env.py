@@ -117,10 +117,75 @@ def configure_asset_paths():
 
     return sfx_path.replace("\\", "/"), bgm_path.replace("\\", "/")
 
+def register_antigravity_skills(root_dir):
+    log("\n[5/5] Registering Skills globally into Antigravity...")
+    gemini_cfg_dir = Path(os.path.expanduser("~/.gemini/config"))
+    skills_path = (root_dir / "skills").resolve()
+    
+    if not gemini_cfg_dir.exists():
+        try:
+            gemini_cfg_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            log(f"  [!] Không thể tạo thư mục Antigravity config: {e}")
+            return
+        
+    skills_json_file = gemini_cfg_dir / "skills.json"
+    data = {"entries": []}
+    if skills_json_file.exists():
+        try:
+            with open(skills_json_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {"entries": []}
+            
+    entries = data.get("entries", [])
+    already_present = any(
+        Path(e.get("path", "")).resolve() == skills_path 
+        for e in entries if isinstance(e, dict) and "path" in e
+    )
+    
+    if not already_present:
+        entries.append({"path": str(skills_path)})
+        data["entries"] = entries
+        try:
+            with open(skills_json_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            log(f"  ✓ Đã đăng ký skills vào {skills_json_file}")
+            log(f"    -> Đường dẫn skills: {skills_path}")
+        except Exception as e:
+            log(f"  [!] Lỗi ghi file skills.json: {e}")
+    else:
+        log(f"  ✓ Skills đã được đăng ký từ trước trong: {skills_json_file}")
+
+def sync_agent_rules(root_dir):
+    agents_src = root_dir / "AGENTS.md"
+    if not agents_src.exists():
+        return
+    try:
+        content = agents_src.read_text(encoding="utf-8")
+        # Sync to GEMINI.md
+        (root_dir / "GEMINI.md").write_text(content, encoding="utf-8")
+        # Sync to CLAUDE.md for Claude Code
+        (root_dir / "CLAUDE.md").write_text(content, encoding="utf-8")
+        # Sync to .cursorrules for Cursor AI
+        (root_dir / ".cursorrules").write_text(content, encoding="utf-8")
+    except Exception as e:
+        log(f"  [!] Không thể đồng bộ tệp chỉ thị: {e}")
+
 def main():
     log("=" * 70)
     log("🎬 ANTIGRAVITY VIDEO EDITORIAL SUITE — SETUP & ENVIRONMENT BOOTSTRAP")
     log("=" * 70)
+
+    root_dir = Path(__file__).resolve().parent
+
+    # Support command-line target installation
+    target_install = None
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--install-to" and len(sys.argv) > 2:
+            target_install = Path(sys.argv[2]).resolve()
+        elif sys.argv[1].startswith("--install-to="):
+            target_install = Path(sys.argv[1].split("=", 1)[1]).resolve()
 
     check_python()
     check_dependencies()
@@ -162,16 +227,32 @@ def main():
         }
     }
 
-    root_dir = Path(__file__).resolve().parent
     out_cfg = root_dir / "config.local.json"
     with open(out_cfg, "w", encoding="utf-8") as f:
         json.dump(local_config, f, indent=2, ensure_ascii=False)
+
+    register_antigravity_skills(root_dir)
+    sync_agent_rules(root_dir)
+
+    if target_install:
+        log(f"\n[+] Đang cài đặt vào workspace: {target_install}...")
+        target_agents = target_install / ".agents"
+        target_agents.mkdir(parents=True, exist_ok=True)
+        # Copy rule files and config
+        for f_name in ["AGENTS.md", "GEMINI.md", "CLAUDE.md", ".cursorrules", "config.local.json"]:
+            src = root_dir / f_name
+            if src.exists():
+                shutil.copy2(src, target_agents / f_name)
+                # also place in target workspace root
+                shutil.copy2(src, target_install / f_name)
+        log(f"  ✓ Đã thiết lập chỉ thị AI Video Editor tại: {target_install}")
 
     log("\n" + "=" * 70)
     log("✅ THIẾT LẬP THÀNH CÔNG!")
     log(f"  • File cấu hình cục bộ đã lưu: {out_cfg}")
     log("  • File này đã được thêm vào .gitignore (an toàn, không bao giờ bị conflict khi git pull)")
-    log("  • Bây giờ bạn có thể mở Antigravity và chat tự nhiên:")
+    log("  • Chỉ thị AI (AGENTS.md, GEMINI.md, CLAUDE.md, .cursorrules) đã được đồng bộ.")
+    log("  • Bây giờ bạn có thể mở Antigravity/Cursor/Claude Code và chat tự nhiên:")
     log("      \"Tách scene cho tôi video này: <đường_dẫn_video>\"")
     log("      \"Dựng sequence các clip theo W-Curve 30s\"")
     log("=" * 70)

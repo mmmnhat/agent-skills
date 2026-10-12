@@ -40,15 +40,10 @@ except ImportError:
     from .candidate_analyzer import analyze_video
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
+ROOT_LOCAL_CONFIG = Path(__file__).resolve().parent.parent.parent.parent / "config.local.json"
 
 def load_config():
-    if CONFIG_PATH.exists():
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {
+    cfg = {
         "output_dir": "output_clean_cut",
         "prefix": "scene_",
         "unblur_enabled": True,
@@ -70,6 +65,21 @@ def load_config():
             "sequence_name": "CleanCut_Timeline"
         }
     }
+    if CONFIG_PATH.exists():
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                cfg.update(json.load(f))
+        except Exception:
+            pass
+    if ROOT_LOCAL_CONFIG.exists():
+        try:
+            with open(ROOT_LOCAL_CONFIG, "r", encoding="utf-8") as f:
+                l_cfg = json.load(f)
+                if "hardware" in l_cfg and "encoder" in l_cfg["hardware"]:
+                    cfg["encoder"] = l_cfg["hardware"]["encoder"]
+        except Exception:
+            pass
+    return cfg
 
 def save_config(cfg):
     try:
@@ -236,13 +246,19 @@ def run_clean_cut(video_path, output_dir=None, prefix=None, threshold=None, min_
             bym = {m["n"]: m for m in cands}
             d = {}
             with open(decisions, "r", encoding="utf-8") as f:
+                line_idx = 0
                 for ln in f:
                     ln = ln.split("#")[0].strip()
                     if not ln: continue
-                    rng, lab = ln.split()[:2]
-                    lo, hi = (rng.split("-") + [rng])[:2]
-                    for i in range(int(lo), int(hi) + 1):
-                        d[i] = lab
+                    parts = ln.split()
+                    if len(parts) == 1:
+                        line_idx += 1
+                        d[line_idx] = parts[0].upper()
+                    else:
+                        rng, lab = parts[0], parts[1].upper()
+                        lo, hi = (rng.split("-") + [rng])[:2]
+                        for i in range(int(lo), int(hi) + 1):
+                            d[i] = lab
             labs = {n: d.get(n, "R") for n in bym}
 
             # Leading consecutive I define intro_end

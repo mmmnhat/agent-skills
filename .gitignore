@@ -21,6 +21,20 @@ Thumbs.db
 config.local.json
 *.local.json
 
+# Build, analysis and test outputs
+_scene/
+_work/
+_cache/
+output_clean_cut/
+output_*/
+test_*/
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.webm
+
+
 # Ignore nested .skill files in subdirectories (only keep packages/*.skill)
 skills/**/*.skill
 skills/*.skill

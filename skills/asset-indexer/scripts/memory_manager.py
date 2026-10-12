@@ -9,10 +9,41 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+ROOT_LOCAL_CONFIG = Path(__file__).resolve().parent.parent.parent.parent / "config.local.json"
+SKILL_CONFIG = Path(__file__).resolve().parent.parent / "config.json"
 DEFAULT_MEMORY_FILE = r"E:\Video Asset\asset_memory.json"
 
+def resolve_memory_path(memory_path=None):
+    if memory_path:
+        return Path(memory_path)
+    if ROOT_LOCAL_CONFIG.exists():
+        try:
+            with open(ROOT_LOCAL_CONFIG, "r", encoding="utf-8") as f:
+                l_cfg = json.load(f)
+                ad = l_cfg.get("asset_directories", {})
+                cand = ad.get("asset_root") or ad.get("sfx_dir")
+                if cand:
+                    p = Path(cand)
+                    if p.name.lower() == "sfx":
+                        p = p.parent
+                    return p / "asset_memory.json"
+        except Exception:
+            pass
+    if SKILL_CONFIG.exists():
+        try:
+            with open(SKILL_CONFIG, "r", encoding="utf-8") as f:
+                sc = json.load(f)
+                p = Path(sc.get("memory_path", ""))
+                if p:
+                    return p
+        except Exception:
+            pass
+    if Path(DEFAULT_MEMORY_FILE).parent.exists():
+        return Path(DEFAULT_MEMORY_FILE)
+    return Path(__file__).resolve().parent.parent / "asset_memory.json"
+
 def load_memory(memory_path=None):
-    m_path = Path(memory_path or DEFAULT_MEMORY_FILE)
+    m_path = resolve_memory_path(memory_path)
     if m_path.exists():
         try:
             with open(m_path, "r", encoding="utf-8") as f:
@@ -28,7 +59,7 @@ def load_memory(memory_path=None):
     }
 
 def save_memory(memory_data, memory_path=None):
-    m_path = Path(memory_path or DEFAULT_MEMORY_FILE)
+    m_path = resolve_memory_path(memory_path)
     m_path.parent.mkdir(parents=True, exist_ok=True)
     memory_data["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     memory_data["total_memories"] = len(memory_data.get("intent_bindings", {}))

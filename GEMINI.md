@@ -28,8 +28,15 @@ python skills/clean-cut/scripts/clean_cut.py "<path_to_video>" --work-dir "_scen
 * **Quy tắc phán quyết 3 nhãn:**
   - **`R` (Real Cut):** Hai bên vạch đỏ là 2 bối cảnh, nhân vật, sự việc hoàn toàn khác nhau $\to$ **Cắt thật thành 2 clip riêng**.
   - **`F` (False Cut - Merge):** Hai bên vạch đỏ là cùng một diễn biến (camera lia nhanh, flash sáng, bọt nước bắn, ngã tiếp đất, replay góc 2) $\to$ **Gộp chung vào clip trước** để bảo toàn trọn vẹn narrative arc.
-  - **`I` (Intro/Disclaimer - Drop):** Chữ cảnh báo ("WARNING", "DISCLAIMER", "CHÚ Ý"), logo kênh, màn đếm ngược, hoặc teaser cắt chớp nhoáng dạo đầu $\to$ **Loại bỏ sạch sẽ**. Ranh giới bắt đầu clip #1 luôn là frame đầu tiên của tình huống thực tế liên tục đầu tiên.
-* Ghi toàn bộ phán quyết vào file `_scene/<video_name>/dec.txt` (mỗi dòng một nhãn `R`, `F`, hoặc `I`).
+* **Ghi phán quyết vào file `_scene/<video_name>/dec.txt`:**
+  - Sử dụng cú pháp số thứ tự (tương ứng với số `#1, #2, #3...` màu vàng trên Contact Sheet):
+    ```
+    1-3 I
+    4-6 R
+    7 F
+    8-24 R
+    ```
+  - Hoặc ghi từng dòng một: `I`, `R`, `F` theo thứ tự từ trên xuống dưới.
 
 ### 📌 Bước 3: Cắt Phần Cứng Frame-Exact & Unblur Cropping
 Chạy lệnh render phần cứng (GPU NVENC trên Windows, VideoToolbox trên Mac, CPU libx264 nếu không có GPU):

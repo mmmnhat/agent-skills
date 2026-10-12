@@ -19,17 +19,48 @@ try:
 except ImportError:
     from .memory_manager import get_affinity_boost
 
+ROOT_LOCAL_CONFIG = Path(__file__).resolve().parent.parent.parent.parent / "config.local.json"
+SKILL_CONFIG = Path(__file__).resolve().parent.parent / "config.json"
 DEFAULT_INDEX_FILE = r"E:\Video Asset\asset_index.json"
 
+def resolve_index_path(index_path=None):
+    if index_path and Path(index_path).exists():
+        return Path(index_path)
+    if ROOT_LOCAL_CONFIG.exists():
+        try:
+            with open(ROOT_LOCAL_CONFIG, "r", encoding="utf-8") as f:
+                l_cfg = json.load(f)
+                ad = l_cfg.get("asset_directories", {})
+                cand = ad.get("asset_root") or ad.get("sfx_dir")
+                if cand:
+                    p = Path(cand)
+                    if p.name.lower() == "sfx":
+                        p = p.parent
+                    idx = p / "asset_index.json"
+                    if idx.exists():
+                        return idx
+        except Exception:
+            pass
+    if SKILL_CONFIG.exists():
+        try:
+            with open(SKILL_CONFIG, "r", encoding="utf-8") as f:
+                sc = json.load(f)
+                p = Path(sc.get("index_path", ""))
+                if p.exists():
+                    return p
+        except Exception:
+            pass
+    local_copy = Path(__file__).resolve().parent.parent / "asset_index.json"
+    if local_copy.exists():
+        return local_copy
+    if Path(DEFAULT_INDEX_FILE).exists():
+        return Path(DEFAULT_INDEX_FILE)
+    return None
+
 def load_index(index_path=None):
-    i_path = Path(index_path or DEFAULT_INDEX_FILE)
-    if not i_path.exists():
-        # Fallback to local copy if available
-        local_copy = Path(__file__).resolve().parent.parent / "asset_index.json"
-        if local_copy.exists():
-            i_path = local_copy
-        else:
-            raise FileNotFoundError(f"Asset index not found at {i_path}. Run indexer first.")
+    i_path = resolve_index_path(index_path)
+    if not i_path or not i_path.exists():
+        return {"total_assets": 0, "assets": []}
             
     with open(i_path, "r", encoding="utf-8") as f:
         return json.load(f)
