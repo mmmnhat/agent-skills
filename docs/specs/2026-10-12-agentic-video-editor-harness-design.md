@@ -17,9 +17,11 @@ Modern AI video editing solutions typically suffer from one of two failure modes
 
 ### 1.2 The Solution
 This specification establishes a **Dual-Layer Closed-Loop Autonomous Video Editorial System**.
-- **Tầng 1 (Core Engine):** Module Python tốc độ cao (>3,000 fps in-memory analysis, NVENC hardware unblur cropping, và semantic memory indexing).
-- **Tầng 2 (Agentic Orchestration & Harness):** Hệ thống đa tác nhân chuyên biệt (Director $\to$ Analyzer $\to$ Planner $\to$ Sound $\to$ Visual $\to$ Operator $\to$ QA) điều khiển Adobe Premiere Pro thông qua 384 công cụ của `premiere-pro-mcp`.
-- **Closed-Loop Test Harness:** Khung kiểm định toán học tự động cưỡng chế 5 Bất Biến Kỹ Thuật (Timeline Invariants), tự động sinh **Patch Plan vi mô** để tự sửa lỗi (Self-Healing) qua vòng lặp phản hồi khép kín trước khi bàn giao cho người dùng.
+- **Mô hình Runtime:** **Single Lead Agent tuần tự hóa qua 7 Skills** — Một Agent Tổng Biên Tập duy nhất điều phối toàn diện, nạp tuần tự từng Skill theo phase và lưu trạng thái vào `state/*.json`. Tránh tốn token và loại bỏ hoàn toàn độ trễ chuyển giao giữa các Subagents.
+- **Chiến lược Intake (Dual-Phase Hybrid):** Sử dụng Python Core Engine (`clean-cut` / NVENC) quét siêu tốc ngoài RAM (>3,000 fps), khử viền mờ 9:16 và cắt frame-exact trước. Sau đó Premiere Pro chỉ import các clip sạch để dựng nhịp và âm thanh, đảm bảo Premiere luôn nhẹ và mượt.
+- **Chuẩn Sequence Mục Tiêu:** **HD 1080p (1920x1080) @ 23.976 fps** (chuẩn điện ảnh / broadcast NTSC Film, khóa timebase hằng số chống trôi âm thanh).
+- **Tầng Agentic Orchestration & Harness:** Điều khiển Adobe Premiere Pro thông qua 384 công cụ của `premiere-pro-mcp`.
+- **Closed-Loop Test Harness:** Nghiệm thu toàn diện theo **Batch Sequence Audit** sau khi dựng xong rough cut, cưỡng chế 5 Bất Biến Kỹ Thuật (Timeline Invariants), tự sinh **Patch Plan vi mô** để tự sửa lỗi (Self-Healing). Nếu lỗi lặp lại quá 3 lần, **Circuit Breaker** thực hiện **Soft Rollback về Checkpoint an toàn + cắm Marker đỏ** và báo cáo trực quan cho Editor.
 
 ---
 
@@ -107,10 +109,11 @@ This specification establishes a **Dual-Layer Closed-Loop Autonomous Video Edito
 
 ### Skill 03: `context-aware-sfx`
 * **Mục tiêu:** Thiết kế âm thanh thông minh, phù hợp ngữ cảnh vật liệu và cảm xúc.
-* **Nhiệm vụ:**
-  - Phân tích tương tác vật liệu: Kim loại va đập khác thủy tinh vỡ, carton rơi khác trượt ngã trên sàn nước.
+* **Nhiệm vụ & Ma Trận Quyết Định Âm Thanh Thích Ứng (Adaptive Audio Matrix):**
+  - **Trường hợp 1 (Âm thanh thực tế rõ nét):** Nếu âm thanh gốc tại frame va chạm có transient rõ ràng (tiếng kính vỡ, sắt thép rơi, va đập thật) $\to$ **Tự động tăng gain Track A1 (+3dB đến +6dB) và KHÔNG chèn SFX giả**. Giữ trọn tính chân thực của footage fail / CCTV.
+  - **Trường hợp 2 (Âm thanh câm / mờ nghẹt):** Nếu video source câm (camera giám sát không mic) hoặc âm thanh quá rè $\to$ **Tra cứu và chèn SFX đặc tả ngữ cảnh lên Track A4**.
+  - **Trường hợp 3 (Có tiếng la hét / phản ứng):** Nếu âm gốc có tiếng người cười, la hét, kinh ngạc $\to$ **Giữ nguyên A1 làm trọng tâm, chèn SFX va chạm với gain thấp hơn tiếng người 3dB** để không làm lu mờ reaction tự nhiên.
   - Tra cứu kho SFX qua công cụ `asset-indexer` với cơ chế "Hỏi và Nhớ" (Affinity Ledger).
-  - Phân định rõ ràng: Giữ nguyên âm thanh gốc có giá trị (valuable original audio) trên track `A1`; chỉ bổ sung SFX va chạm trên `A4` và Whoosh chuyển cảnh trên `A3`.
 
 ### Skill 04: `adaptive-pacing`
 * **Mục tiêu:** Điều tiết nhịp thở và đường cong giữ chân người xem (Audience Retention).
@@ -131,7 +134,7 @@ This specification establishes a **Dual-Layer Closed-Loop Autonomous Video Edito
 * **Mục tiêu:** Trực tiếp điều khiển Adobe Premiere Pro thông qua 384 công cụ của `premiere-pro-mcp`.
 * **Nhiệm vụ:**
   - Ánh xạ trực tiếp từng thao tác trong `edit-plan.json` sang lời gọi MCP tương ứng:
-    - Tạo sequence: `create_sequence`
+    - Tạo sequence: `create_sequence` (chuẩn HD 1080p @ 23.976 fps)
     - Dải video lên V1: `add_to_timeline_batch`
     - Cắt tỉa: `trim_clip`, `split_clip`, `ripple_delete`
     - Đặt SFX/BGM: `add_to_timeline` trên track A3, A4, A5
@@ -140,12 +143,12 @@ This specification establishes a **Dual-Layer Closed-Loop Autonomous Video Edito
   - Quản lý checkpoint an toàn (`create_sequence_checkpoint`) trước mọi thao tác đột biến timeline.
 
 ### Skill 07: `video-quality-control`
-* **Mục tiêu:** Kiểm tra chất lượng tự động, phát hiện sai sót kỹ thuật và điều phối tự sửa lỗi.
+* **Mục tiêu:** Kiểm tra chất lượng tự động theo cơ chế **Batch Sequence Audit**, phát hiện sai sót kỹ thuật và điều phối tự sửa lỗi.
 * **Nhiệm vụ:**
-  - Đọc ngược trạng thái timeline sau khi Premiere Operator thao tác (`get_sequence_structure`, `get_timeline_gaps`).
-  - Chạy toàn bộ bộ kiểm tra Bất Biến (Invariants Assertion Engine).
-  - Xuất ảnh frame review (`export_sequence_review_frames`, `capture_frame`) để mắt AI kiểm tra visual artifacts.
-  - Khi phát hiện lỗi: Tạo `state/patch-plan.json` để Operator khắc phục.
+  - Sau khi dựng xong toàn bộ rough cut trên Timeline, gọi `get_sequence_structure`, `get_timeline_gaps` đọc ngược toàn bộ dữ liệu.
+  - Chạy song song toàn bộ 5 Invariants toán học (`INV-01` đến `INV-05`).
+  - Khi phát hiện vi phạm: Tạo `state/patch-plan.json` sửa đồng loạt tất cả các lỗi trong một batch.
+  - Sau khi sửa xong: Chụp ảnh review frames (`export_sequence_review_frames`, `capture_frame`) để mắt AI soi visual artifacts trước khi chốt.
 
 ---
 
@@ -162,7 +165,8 @@ $$\text{Master Action Peak Frame} = \text{Master Sequence In} + (\text{Source Cl
   "$schema": "../schemas/edit_plan.schema.json",
   "plan_id": "plan_funny_moments_001",
   "project_name": "IdiotsAtWork_Ep18",
-  "fps": 30.0,
+  "resolution": [1920, 1080],
+  "fps": 23.976,
   "target_duration_sec": 30.0,
   "audio_layout": {
     "V1": "Video Clips",
@@ -238,11 +242,12 @@ Hệ thống Harness chạy tự động sau mỗi phiên mutation của Premier
 └──────────┴─────────────────────────────┴──────────────────────────────────────┴──────────────────────────────────┘
 ```
 
-### 5.2 Bộ Ngắt Mạch Tự Động (Circuit Breaker)
+### 5.2 Bộ Ngắt Mạch Tự Động (Circuit Breaker & Rollback Policy)
 * Nếu sau **3 vòng lặp tự sửa (3 iterations)** mà Harness vẫn chưa đạt trạng thái PASS 100%:
-  1. Dừng ngay lập tức các lệnh mutation lên Timeline Premiere để tránh làm biến dạng timeline.
-  2. Xuất báo cáo chẩn đoán chi tiết ra `state/qa-report.json`.
-  3. Chụp frame tại các điểm vi phạm qua `capture_frame` và gửi cảnh báo trực quan cho người dùng trong chat để người dùng quyết định.
+  1. **Khôi phục an toàn (Soft Rollback):** Tự động gọi `undo` hoặc nạp lại Sequence Checkpoint an toàn gần nhất trước khi bắt đầu chuỗi tự sửa, ngăn chặn timeline bị biến dạng do sửa lặp.
+  2. **Cắm Marker cảnh báo:** Tự động cắm Sequence Marker màu đỏ (`add_marker` với color='Red', name='[QA_FAIL]') tại các vị trí frame vi phạm.
+  3. **Xuất báo cáo chẩn đoán:** Ghi đầy đủ mã lỗi, delta frame vào `state/qa-report.json`.
+  4. **Báo cáo trực quan cho Editor:** Chụp ảnh frame tại vị trí lỗi qua `capture_frame`, gửi vào khung chat và yêu cầu Editor chỉ thị tiếp theo.
 
 ---
 
