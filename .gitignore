@@ -9,10 +9,50 @@ __pycache__/
 .venv/
 venv/
 env/
+vendor/
 
 # Logs and temporary files
 *.log
 *.tmp
 .DS_Store
 Thumbs.db
-vendor/
+
+# Ignore nested .skill files in subdirectories (only keep packages/*.skill)
+skills/**/*.skill
+skills/*.skill
+
+# Exclude generic non-video / external workflow skills from git tracking
+skills/caveman/
+skills/design-an-interface/
+skills/diagnose/
+skills/edit-article/
+skills/git-guardrails-claude-code/
+skills/grill-me/
+skills/grill-with-docs/
+skills/handoff/
+skills/improve-codebase-architecture/
+skills/migrate-to-shoehorn/
+skills/obsidian-vault/
+skills/ponytail/
+skills/ponytail-audit/
+skills/ponytail-debt/
+skills/ponytail-gain/
+skills/ponytail-help/
+skills/ponytail-review/
+skills/prototype/
+skills/qa/
+skills/request-refactor-plan/
+skills/review/
+skills/scaffold-exercises/
+skills/setup-matt-pocock-skills/
+skills/setup-pre-commit/
+skills/tdd/
+skills/to-issues/
+skills/to-prd/
+skills/triage/
+skills/ubiquitous-language/
+skills/write-a-skill/
+skills/writing-beats/
+skills/writing-fragments/
+skills/writing-shape/
+skills/zoom-out/
