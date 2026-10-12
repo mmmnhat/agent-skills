@@ -17,6 +17,10 @@ vendor/
 .DS_Store
 Thumbs.db
 
+# User-specific machine configuration
+config.local.json
+*.local.json
+
 # Ignore nested .skill files in subdirectories (only keep packages/*.skill)
 skills/**/*.skill
 skills/*.skill

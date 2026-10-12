@@ -4,6 +4,31 @@ An end-to-end autonomous video editorial workflow and skill suite for Antigravit
 
 ---
 
+## ⚡ Cài Đặt 1 Bước Cho Máy Mới (1-Step Setup)
+
+Khi tải repo về máy mới, chỉ cần chạy 1 lệnh duy nhất:
+```bash
+python setup_env.py
+```
+* **Tự động dò phần cứng:** Tự động chọn encoder mạnh nhất máy hỗ trợ (NVIDIA NVENC, Apple Silicon VideoToolbox, Intel QSV, hoặc CPU libx264).
+* **Cấu hình kho Asset:** Hỏi đường dẫn thư mục SFX & BGM nhạc nền riêng của bạn (hoặc Enter để bỏ qua nếu chưa có).
+* **Sinh file cấu hình an toàn:** Lưu vào `config.local.json` (được `.gitignore` bảo vệ, không bao giờ bị conflict khi `git pull`).
+
+---
+
+## 🤖 Trải Nghiệm Hội Thoại Với AI Agent (Agentic Workflow)
+
+Repo này được trang bị sẵn tệp chỉ thị **[`AGENTS.md`](AGENTS.md)** & **[`GEMINI.md`](GEMINI.md)**. Bất kỳ AI Agent nào (Antigravity, Cursor, Claude Code) khi mở thư mục này sẽ **tự động đóng vai Autonomous Lead Video Editor**:
+
+| Bạn gõ vào khung chat AI | AI Agent tự động thực hiện |
+| :--- | :--- |
+| *"Tách scene cho tôi video này: D:\video.mp4"* | Tự quét candidate $\to$ **Tự dùng mắt AI (`view_file`) soi Contact Sheets** $\to$ Tự loại bỏ intro/gộp cảnh $\to$ Cắt GPU $\to$ Hậu kiểm Filmstrip. |
+| *"Dựng sequence các clip vừa tách theo W-Curve 30s"* | Chấm điểm Score $\to$ Đóng gói cụm sự kiện $\to$ **Dựng thẳng lên timeline Premiere Pro** (5-track layout: V1, A1, A2 trống VO, A3/A4 SFX, A5 BGM). |
+| *"Soi và thẩm định folder clip này: D:\clips"* | Quét pHash trùng lặp $\to$ Sinh Filmstrip 4 ô $\to$ Phân tích cấu trúc Setup-Climax-Reaction. |
+| *"Che logo ở góc trên bên phải video này"* | OpenCV tracking vùng chọn $\to$ Delogo hoặc chèn Adjustment Layer trên Premiere Pro V2. |
+
+---
+
 ## 🚀 Core Editorial Skills
 
 ### 1. `clean-cut`
