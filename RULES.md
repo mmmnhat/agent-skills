@@ -12,11 +12,16 @@ These rules are universally binding and take precedence over individual skill va
 
 ---
 
-## 2. Editorial Reasoning
+## 2. Editorial Reasoning & Ultra-Tight Pacing
 - **Understand the event before editing:** Complete narrative comprehension takes priority over fast cutting.
-- **Preserve setup and payoff (INV-05):** Always allow the audience to see anticipation and aftermath (minimum 0.8s reaction window).
+- **Ultra-Tight Fast-Cut Ceilings (Bắt buộc):**
+  - Setup / Hook: $2.0\text{s} - 3.5\text{s}$ (tối đa 4.0s). Bỏ 100% các đoạn máy lắc lư, lia chưa cố định.
+  - Anticipation: $1.0\text{s} - 2.0\text{s}$.
+  - Climax: $1.5\text{s} - 3.0\text{s}$ (quanh đỉnh va chạm/thót tim).
+  - Payoff / Reaction: $1.5\text{s} - 3.5\text{s}$ (tối đa 4.0s, tối thiểu 0.8s theo INV-05). Khán giả thấy kết quả là cắt ngay!
+  - **TỔNG MỖI INCIDENT: CHỈ 7s – 15s.** Tuyệt đối không để từng đoạn kéo dài 10s-21s làm loãng video.
+- **Zero Dead Air:** Mọi đoạn trườn bò quẩn quanh, loay hoay lặp lại $> 2\text{s}$ đều phải gọt sạch.
 - **Prefer intentional edits over decorative effects:** Do not add transitions, zooms, or SFX unless they enhance narrative impact.
-- **Do not blindly apply formulas:** Adapt pacing to the natural comedic rhythm of each individual incident.
 
 ---
 
@@ -30,7 +35,8 @@ These rules are universally binding and take precedence over individual skill va
 
 ---
 
-## 4. Premiere Execution & Safety
+## 4. Premiere Execution & High-Speed Batch Processing
+- **High-Speed Batch Execution:** Phải gom toàn bộ các điểm cắt, markers, hoặc edits thành **1 batch duy nhất** (hoặc 1 kịch bản thực thi tự động). Tuyệt đối không gọi từng công cụ MCP lẻ tẻ nhiều lượt làm tắc nghẽn và làm chậm tiến độ người dùng.
 - **Never modify original source files:** All mutations occur on trimmed exports or inside Premiere sequence instances.
 - **Standard Sequence Timebase:** Output sequences must strictly conform to Full HD 1080p (1920x1080) at 23.976 fps constant frame rate.
 - **Checkpoints Before Mutations:** Always call `create_sequence_checkpoint` before executing timeline changes.

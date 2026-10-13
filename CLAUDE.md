@@ -55,12 +55,21 @@ python skills/clean-cut/scripts/clean_cut.py "<path_to_video>" --output-dir "out
 
 ## 🎬 WORKFLOW 2: DỰNG NHỊP TIMELINE & SOUND DESIGN (`pacing-editor`)
 
-Khi người dùng yêu cầu: *"dựng timeline"*, *"tạo sequence"*, *"ghép clip theo w-curve"*, *"lắp sfx"*, *"pacing editor"*:
+Khi người dùng yêu cầu: *"dựng timeline"*, *"tạo sequence"*, *"ghép clip theo w-curve"*, *"lắp sfx"*, *"pacing editor"*, *"cắt đoạn dài dòng"*:
+
+### ⚡ QUY TẮC NHỊP SIÊU TỐC (ULTRA-TIGHT FAST-CUT CEILINGS - BẮT BUỘC):
+Tuyệt đối **KHÔNG ĐƯỢC** để các đoạn setup, climax, payoff kéo dài 10–21 giây làm video bị lê thê, mất retention:
+- **`Setup / Hook`**: **2.0s – 3.5s** (Tối đa 4.0s). Bỏ 100% các frame máy lắc lư, lia chưa định góc.
+- **`Anticipation`**: **1.0s – 2.0s**.
+- **`Climax / Hit`**: **1.5s – 3.0s** (`Peak - 0.8s` đến `Peak + 1.2s`).
+- **`Payoff / React`**: **1.5s – 3.5s** (Tối đa 4.0s, tối thiểu 0.8s theo INV-05). Khán giả thấy kết quả/phản ứng là cắt ngay!
+- **`TỔNG INCIDENT`**: **7.0s – 12.0s** (Tối đa 15.0s cho tình huống phức tạp).
+- **`BATCH EXECUTION SPEED`**: Phải gom toàn bộ điểm cắt và thực thi trong **1 batch duy nhất** (hoặc 1 kịch bản tự động). Tuyệt đối không gọi từng lệnh MCP lẻ tẻ nhiều lượt làm tắc nghẽn và làm chậm tiến độ.
 
 ### 📌 2 Chế Độ Dựng:
 1. **Dạng 1: `sequential` (Giữ nguyên thứ tự gốc)**
    - Giữ 100% thứ tự các clip theo thời gian xuất hiện.
-   - Áp dụng **Hard Fast-Cut** (chỉ lấy đoạn kịch tính `Climax - 1.0s` đến `Climax + 1.0s`, loại bỏ đoạn mở đầu và kết thúc lê thê).
+   - Áp dụng **Ultra-Tight Fast-Cut** theo các trần thời lượng trên, loại bỏ triệt để đoạn mở đầu và kết thúc lê thê.
 2. **Dạng 2: `w-curve` (Xếp lại theo kịch bản giữ chân W-Curve)**
    - Chấm điểm Sức hút: $S = 0.40 \cdot \text{Motion} + 0.35 \cdot \text{Arc} + 0.25 \cdot \text{Audio}$.
    - Đóng gói theo Cụm sự kiện (`Incident Bundle`): Các clip cùng sự kiện luôn chiếu liền mạch nhau.
