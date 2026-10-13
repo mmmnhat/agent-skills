@@ -110,6 +110,23 @@ Khi người dùng bảo *"che logo"*, *"xóa watermark"*, *"làm mờ vết th�
 
 ---
 
+## 🔬 WORKFLOW 5: CLOSED-LOOP HARNESS AUDIT & REPAIR (`video-quality-control`)
+
+Sau khi dựng sequence hoặc khi người dùng yêu cầu: *"kiểm tra timeline"*, *"audit timeline"*, *"chạy harness"*, *"sửa lỗi sequence"*:
+
+### 📌 5 Bất Biến Bắt Buộc (The 5 Timeline Invariants):
+1. **`INV-01` (Zero Gap on V1):** `len(get_timeline_gaps('V1')) == 0` $\to$ Tự động `ripple_delete` sạch các khe hở frame đen.
+2. **`INV-02` (Frame-Exact SFX Sync):** $|\text{Frame}_{\text{SFX}} - \text{Frame}_{\text{Climax}}| \le 1$ frame $\to$ Tự động `move_clip` trên A4 dời đúng frame va chạm.
+3. **`INV-03` (Audio Headroom):** $\text{True Peak} \le -1.0\text{ dBFS}$ $\to$ Tự động `adjust_audio_levels` hạ gain chống vỡ tiếng.
+4. **`INV-04` (Voiceover Track A2 Integrity):** `len(get_clips('A2')) == 0` $\to$ Track A2 phải 100% để trống cho thu âm VO. Dời mọi clip đi lạc sang A3/A4.
+5. **`INV-05` (Payoff Window Preservation):** $\text{Frame}_{\text{Out}} \ge \text{Climax} + 0.8\text{s} \times \text{FPS}$ $\to$ Tự động `trim_clip` nới đuôi clip đảm bảo khán giả kịp phản ứng.
+
+### 📌 Vòng Lặp Tự Khắc Phục (Self-Healing Loop) & Circuit Breaker:
+* Tự động sinh `state/patch-plan.json` và gọi Premiere Pro MCP thực thi sửa đổi trong 1 batch duy nhất.
+* **Bộ ngắt mạch an toàn (Max 3 chu kỳ):** Nếu sau 3 chu kỳ sửa mà vẫn vi phạm $\to$ Tự động gọi soft rollback về Checkpoint an toàn, cắm Marker cảnh báo màu đỏ (`[QA_FAIL]`), chụp ảnh frame qua `capture_frame` và gửi vào chat xin chỉ thị người dùng.
+
+---
+
 ## 💡 CÁC CÂU LỆNH MẪU NGƯỜI DÙNG THƯỜNG DÙNG (USER PROMPT CHEAT SHEET)
 
 | Mục tiêu của Người Dùng | Câu lệnh người dùng gõ vào chat | Hành động tự động của Agent |
@@ -119,3 +136,5 @@ Khi người dùng bảo *"che logo"*, *"xóa watermark"*, *"làm mờ vết th�
 | **Dựng tuần tự giữ nguyên thứ tự** | *"Dựng các clip này lên timeline Premiere theo thứ tự gốc, cắt gọt đoạn thừa và lắp sfx"* | Chạy Workflow 2 (`--mode sequential`): Hard Fast-Cut In/Out $\to$ Phân bổ 5 track audio $\to$ Đẩy thẳng vào Premiere Pro. |
 | **Thẩm định kho clip có sẵn** | *"Soi và thẩm định giúp tôi folder clip này: E:\clips"* | Chạy Workflow 3: Sinh Filmstrip 4 ô $\to$ AI Vision soi filmstrip $\to$ Báo cáo clip hoàn chỉnh vs clip bị cắt lửng. |
 | **Che logo trên video** | *"Che logo kênh ở góc trên bên phải clip này"* | Chạy Workflow 4: Tracking vùng chọn $\to$ Delogo hoặc chèn Adjustment Layer Premiere Pro. |
+| **Kiểm tra và tự sửa lỗi timeline** | *"Audit timeline Premiere và tự sửa các lỗi lệch sync hoặc hở đen"* | Chạy Workflow 5: Đọc timeline state $\to$ Chạy `HarnessEvaluator` $\to$ Sinh `patch-plan.json` $\to$ Thực thi tự sửa 1 batch. |
+
