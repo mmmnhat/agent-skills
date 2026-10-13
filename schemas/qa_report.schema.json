@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QAReport",
+  "description": "Comprehensive audit report evaluated by the Closed-Loop Harness against the 5 Timeline Invariants",
+  "type": "object",
+  "required": ["report_id", "timestamp", "sequence_name", "cycle_index", "overall_status", "invariants_results"],
+  "properties": {
+    "report_id": { "type": "string" },
+    "timestamp": { "type": "string" },
+    "sequence_name": { "type": "string" },
+    "cycle_index": { "type": "integer" },
+    "overall_status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL_REPAIRABLE", "CIRCUIT_BREAKER_TRIPPED"]
+    },
+    "invariants_results": {
+      "type": "object",
+      "required": ["INV-01", "INV-02", "INV-03", "INV-04", "INV-05"],
+      "properties": {
+        "INV-01": {
+          "type": "object",
+          "required": ["status", "error_count", "violations"],
+          "properties": {
+            "name": { "type": "string" },
+            "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+            "error_count": { "type": "integer" },
+            "violations": { "type": "array" }
+          }
+        },
+        "INV-02": {
+          "type": "object",
+          "required": ["status", "error_count", "violations"],
+          "properties": {
+            "name": { "type": "string" },
+            "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+            "error_count": { "type": "integer" },
+            "violations": { "type": "array" }
+          }
+        },
+        "INV-03": {
+          "type": "object",
+          "required": ["status", "error_count", "violations"],
+          "properties": {
+            "name": { "type": "string" },
+            "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+            "error_count": { "type": "integer" },
+            "violations": { "type": "array" }
+          }
+        },
+        "INV-04": {
+          "type": "object",
+          "required": ["status", "error_count", "violations"],
+          "properties": {
+            "name": { "type": "string" },
+            "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+            "error_count": { "type": "integer" },
+            "violations": { "type": "array" }
+          }
+        },
+        "INV-05": {
+          "type": "object",
+          "required": ["status", "error_count", "violations"],
+          "properties": {
+            "name": { "type": "string" },
+            "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+            "error_count": { "type": "integer" },
+            "violations": { "type": "array" }
+          }
+        }
+      }
+    },
+    "review_frames_captured": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "recommendation": { "type": "string" }
+  }
+}

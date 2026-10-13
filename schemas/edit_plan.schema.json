@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EditPlan",
+  "description": "Deterministic multi-track assembly and sound design plan for Adobe Premiere Pro",
+  "type": "object",
+  "required": ["plan_id", "project_name", "resolution", "fps", "audio_layout", "incidents"],
+  "properties": {
+    "plan_id": { "type": "string" },
+    "project_name": { "type": "string" },
+    "target_duration_sec": { "type": "number", "minimum": 1.0 },
+    "resolution": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "fps": { "type": "number", "default": 23.976 },
+    "audio_layout": {
+      "type": "object",
+      "required": ["V1", "A1", "A2", "A3", "A4", "A5"],
+      "properties": {
+        "V1": { "type": "string" },
+        "V2": { "type": "string" },
+        "A1": { "type": "string" },
+        "A2": { "type": "string" },
+        "A3": { "type": "string" },
+        "A4": { "type": "string" },
+        "A5": { "type": "string" }
+      }
+    },
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["incident_id", "pacing_role", "source_ref", "master_timeline"],
+        "properties": {
+          "incident_id": { "type": "string" },
+          "pacing_role": {
+            "type": "string",
+            "enum": [
+              "HOOK_RANK_2",
+              "CONTEXT_VALLEY_1",
+              "MID_CLIMAX_RANK_3",
+              "SUSPENSE_VALLEY_2",
+              "GRAND_FINALE_RANK_1",
+              "SEQUENTIAL_CLIP"
+            ]
+          },
+          "source_ref": {
+            "type": "object",
+            "required": ["media_path", "source_in_frame", "source_climax_frame", "source_out_frame"],
+            "properties": {
+              "media_path": { "type": "string" },
+              "source_fps": { "type": "number" },
+              "source_in_frame": { "type": "integer", "minimum": 0 },
+              "source_climax_frame": { "type": "integer", "minimum": 0 },
+              "source_out_frame": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "master_timeline": {
+            "type": "object",
+            "required": ["track_v", "sequence_in_frame", "sequence_out_frame", "mapped_climax_frame"],
+            "properties": {
+              "track_v": { "type": "string", "default": "V1" },
+              "sequence_in_frame": { "type": "integer", "minimum": 0 },
+              "sequence_out_frame": { "type": "integer", "minimum": 0 },
+              "mapped_climax_frame": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "visual_operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": { "type": "string", "enum": ["punch_in_zoom", "shield_blur", "speed_ramp"] },
+                "start_frame": { "type": "integer" },
+                "end_frame": { "type": "integer" },
+                "scale_start": { "type": "number" },
+                "scale_peak": { "type": "number" },
+                "blur_box": {
+                  "type": "object",
+                  "properties": {
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "width": { "type": "number" },
+                    "height": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "sound_operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "track", "sync_to_master_frame"],
+              "properties": {
+                "type": { "type": "string", "enum": ["climax_sfx", "transition_whoosh", "original_audio_boost", "bgm_ducking"] },
+                "asset_id": { "type": "string" },
+                "asset_path": { "type": "string" },
+                "track": { "type": "string", "enum": ["A1", "A3", "A4", "A5"] },
+                "sync_to_master_frame": { "type": "integer" },
+                "gain_db": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

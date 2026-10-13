@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SourceManifest",
+  "description": "Standardized metadata manifest for raw and pre-processed source footage",
+  "type": "object",
+  "required": ["manifest_id", "source_video", "fps", "resolution", "scenes"],
+  "properties": {
+    "manifest_id": {
+      "type": "string"
+    },
+    "source_video": {
+      "type": "string"
+    },
+    "fps": {
+      "type": "number",
+      "minimum": 1.0
+    },
+    "resolution": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "duration_sec": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scene_id", "start_frame", "end_frame", "climax_frame"],
+        "properties": {
+          "scene_id": { "type": "string" },
+          "clip_path": { "type": "string" },
+          "start_frame": { "type": "integer", "minimum": 0 },
+          "end_frame": { "type": "integer", "minimum": 0 },
+          "climax_frame": { "type": "integer", "minimum": 0 },
+          "start_time": { "type": "number", "minimum": 0.0 },
+          "end_time": { "type": "number", "minimum": 0.0 },
+          "duration_sec": { "type": "number", "minimum": 0.0 },
+          "lead_in_sec": { "type": "number" },
+          "climax_sec": { "type": "number" },
+          "recovery_sec": { "type": "number" },
+          "motion_score": { "type": "number" },
+          "audio_score": { "type": "number" },
+          "pacing_weight": { "type": "number" },
+          "audio_transient_detected": { "type": "boolean" },
+          "transient_dbfs": { "type": "number" },
+          "speech_detected": { "type": "boolean" },
+          "material_type": { "type": "string" },
+          "unblur_crop": {
+            "type": ["object", "null"],
+            "properties": {
+              "left": { "type": "integer" },
+              "top": { "type": "integer" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

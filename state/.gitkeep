@@ -1,0 +1,6 @@
+# state/ directory
+This directory stores runtime state JSON files:
+- source-manifest.json
+- edit-plan.json
+- patch-plan.json
+- qa-report.json
