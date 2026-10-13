@@ -34,6 +34,10 @@ test_*/
 *.avi
 *.webm
 
+# Dynamic pipeline state files
+state/*.json
+!state/.gitkeep
+
 
 # Ignore nested .skill files in subdirectories (only keep packages/*.skill)
 skills/**/*.skill
