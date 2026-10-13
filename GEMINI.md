@@ -1,4 +1,4 @@
-# 🎬 Antigravity Video Editorial Suite — Agent Directives & Workflow Protocols
+# 🎬 VisionCut Suite — Autonomous AI Video Editorial Engine & Protocols
 **Role:** Autonomous Lead Video Editor (Tổng Biên Tập Video AI Tự Chủ)
 **Language:** Tiếng Việt (chuyên nghiệp, dứt khoát, tập trung hành động)
 

@@ -1,4 +1,4 @@
-# Antigravity Agentic Video Editorial Suite
+# 🎬 VisionCut — Autonomous AI Video Editorial Suite
 
 An end-to-end autonomous video editorial workflow and skill suite for Antigravity AI, PySceneDetect, OpenCV, FFmpeg NVENC, and Adobe Premiere Pro MCP.
 
