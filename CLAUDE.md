@@ -57,13 +57,14 @@ python skills/clean-cut/scripts/clean_cut.py "<path_to_video>" --output-dir "out
 
 Khi người dùng yêu cầu: *"dựng timeline"*, *"tạo sequence"*, *"ghép clip theo w-curve"*, *"lắp sfx"*, *"pacing editor"*, *"cắt đoạn dài dòng"*:
 
-### ⚡ QUY TẮC NHỊP SIÊU TỐC (ULTRA-TIGHT FAST-CUT CEILINGS - BẮT BUỘC):
-Tuyệt đối **KHÔNG ĐƯỢC** để các đoạn setup, climax, payoff kéo dài 10–21 giây làm video bị lê thê, mất retention:
-- **`Setup / Hook`**: **2.0s – 3.5s** (Tối đa 4.0s). Bỏ 100% các frame máy lắc lư, lia chưa định góc.
-- **`Anticipation`**: **1.0s – 2.0s**.
-- **`Climax / Hit`**: **1.5s – 3.0s** (`Peak - 0.8s` đến `Peak + 1.2s`).
-- **`Payoff / React`**: **1.5s – 3.5s** (Tối đa 4.0s, tối thiểu 0.8s theo INV-05). Khán giả thấy kết quả/phản ứng là cắt ngay!
-- **`TỔNG INCIDENT`**: **7.0s – 12.0s** (Tối đa 15.0s cho tình huống phức tạp).
+### ⚡ CẤU TRÚC 4 HỒI CHUẨN & TRẦN NHỊP SIÊU TỐC (4-BEAT NARRATIVE CORE):
+Mọi tình huống (comedy, drama, fail, viral incident) bắt buộc tuân theo 4 hồi để bảo toàn ngữ cảnh và giữ trọn tiếng cười:
+- **`Hồi 1: Premise / Setup`**: **2.0s – 3.5s** (Tối đa 4.0s). **Bảo toàn Ngữ cảnh (Context):** Bắt đầu ngay khi hành động có chủ đích xuất hiện. Khán giả phải hiểu ai đang làm gì và bối cảnh ở đâu. Bỏ đoạn máy rung lắc, lia chưa định góc.
+- **`Hồi 2: Escalation / Anticipation`**: **1.5s – 3.0s** (Tối đa 3.5s). Điềm báo nguy cơ hoặc sự vụng về bắt đầu lộ ra.
+- **`Hồi 3: Punchline / Climax`**: **1.5s – 2.5s** (Tối đa 3.0s). Khoảnh khắc sự việc vỡ lở, va chạm, cú ngã, trò đùa nổ tung.
+- **`Hồi 4: Aftermath / Reaction`**: **2.0s – 4.0s** (Tối đa 4.5s). **Reaction Hold:** Giữ trọn biểu cảm (ngơ ngác, cười ngượng, la hét) cho đến khi lắng xuống. Tối thiểu 1.5s sau va chạm. Tuyệt đối không cắt cụt làm nghẹn tiếng cười!
+- **`TỔNG INCIDENT`**: **8.0s – 14.0s** (Tối đa 15.0s cho tình huống phức tạp).
+- **`DEAD-MIDDLE MICRO-CUT`**: Nếu giữa Setup và Climax có khoảng chờ rảnh rỗi lê thê (> 4s), thực hiện jump-cut cắt bỏ khoảng chờ ở giữa, **tuyệt đối không vứt bỏ Setup**!
 - **`BATCH EXECUTION SPEED`**: Phải gom toàn bộ điểm cắt và thực thi trong **1 batch duy nhất** (hoặc 1 kịch bản tự động). Tuyệt đối không gọi từng lệnh MCP lẻ tẻ nhiều lượt làm tắc nghẽn và làm chậm tiến độ.
 
 ### 📌 2 Chế Độ Dựng:
