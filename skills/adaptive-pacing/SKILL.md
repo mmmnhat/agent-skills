@@ -22,11 +22,11 @@ Mọi incident / moment trên timeline tuân theo chuẩn 4 hồi:
 
 ## 🎯 2 Chế Độ Dựng
 
-### 1. Sequential Fast-Cut Mode (Theo Thứ Tự Gốc)
+### 1. Sequential Fast-Cut Mode (Theo Thứ Tự Gốc — Reasoning-Based)
 - Giữ 100% thứ tự các clip theo thời gian xuất hiện.
-- **Context Preservation:** Bắt buộc giữ đoạn mở đầu thiết lập tiền đề ($2.0\text{s} - 3.5\text{s}$).
-- **Dead-Middle Micro-Cut:** Nếu giữa Setup và Climax có đoạn rảnh rỗi lê thê $> 4\text{s}$, cắt bỏ đoạn rảnh ở giữa và nối Setup vào Climax, tuyệt đối không hy sinh Setup.
-- **Reaction Hold:** Giữ trọn vẹn phản ứng sau cú hit tối thiểu $1.5\text{s} - 3.5\text{s}$.
+- **Hard Scene Cut Isolation (Bắt buộc bước 1):** Tách sạch ranh giới chuyển cảnh cứng để loại bỏ phần thừa của video trước/sau (compilation bleed), cô lập đúng cảnh mục tiêu `[scene_start, scene_end]`.
+- **Single Continuous Causal Slice (Bảo toàn Raccord & Ngữ cảnh):** Giữ 1 đoạn liền mạch duy nhất (`[in_pt -> out_pt]`) bao trọn chuỗi Nhân – Quả (*Setup $\to$ Escalation $\to$ Climax $\to$ Reaction*), tuyệt đối không cắt nhảy cóc (jump-cut) mù `[0s->3s]` làm đứt mạch raccord.
+- **Reaction Hold:** Giữ trọn vẹn phản ứng sau cú hit tối thiểu $1.5\text{s} - 3.5\text{s}$ trước khi chuyển sang cảnh kế tiếp.
 
 ### 2. W-Curve Mode (Tối Đa Retention Theo Đường Cong Giữ Chân)
 Chấm điểm Sức hút cho từng incident:
