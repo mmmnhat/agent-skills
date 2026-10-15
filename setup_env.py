@@ -169,6 +169,29 @@ def sync_agent_rules(root_dir):
         (root_dir / "CLAUDE.md").write_text(content, encoding="utf-8")
         # Sync to .cursorrules for Cursor AI
         (root_dir / ".cursorrules").write_text(content, encoding="utf-8")
+        
+        # Sync to Claude global directory (~/.claude/CLAUDE.md)
+        claude_home = Path.home() / ".claude"
+        if claude_home.exists():
+            (claude_home / "CLAUDE.md").write_text(content, encoding="utf-8")
+            log(f"  ✓ Đã đồng bộ CLAUDE.md toàn cục tại: {claude_home / 'CLAUDE.md'}")
+            
+            # Sync skills to ~/.claude/skills
+            claude_skills = claude_home / "skills"
+            claude_skills.mkdir(parents=True, exist_ok=True)
+            src_skills = root_dir / "skills"
+            if src_skills.exists():
+                for s_dir in src_skills.iterdir():
+                    if s_dir.is_dir() and not s_dir.name.startswith("."):
+                        target_dir = claude_skills / s_dir.name
+                        shutil.copytree(s_dir, target_dir, dirs_exist_ok=True)
+                log(f"  ✓ Đã cài đặt VisionCut skills vào Claude: {claude_skills}")
+        
+        # Also copy to workspace root (parent of .agents)
+        workspace_root = root_dir.parent
+        if workspace_root.exists() and workspace_root != root_dir:
+            (workspace_root / "CLAUDE.md").write_text(content, encoding="utf-8")
+            (workspace_root / "AGENTS.md").write_text(content, encoding="utf-8")
     except Exception as e:
         log(f"  [!] Không thể đồng bộ tệp chỉ thị: {e}")
 
