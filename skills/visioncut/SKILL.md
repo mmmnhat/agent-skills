@@ -67,6 +67,59 @@ python skills/visioncut/scripts/generate_storyboard.py "<path_to_video>" "state/
   - Track `A4`: Climax SFX (Impact / Punch / Thud tại mốc Climax).
   - Track `A5`: BGM (Ducked Background Music).
 
-### Bước 4: Tự Tiến Hóa & Học Hỏi Qua OpenSpace
+### Bước 4: Tối Ưu Hóa Tốc Độ Theo Kênh (`channel_profiles.json` & `premiere-cli` Fast Batch)
+Đọc cấu hình kênh tại `E:\.agents\skills\visioncut\resources\channel_profiles.json`:
+1. **Chống cắt nhầm Sequence / Project:** Luôn truyền tường minh `sequenceName` (ví dụ `"kb105"`) vào mọi lệnh `premiere-cli`. Khi mở nhiều project (`app.projects`), `set-item-in-out` và `add-to-timeline` tự động quét qua toàn bộ `app.projects[p].rootItem`.
+2. **Bảo toàn tuyệt đối đồng bộ `V1` + `A1` (Zero Audio Drift):**
+   - Cấm dùng `seq.overwriteClip` đơn lẻ cho subclip vì Premiere 2026 bỏ qua `inPoint`/`outPoint` của projectItem và ghi đè toàn bộ thời lượng gốc lên `A1`.
+   - Khi cắt cảnh trên timeline: gán đồng thời `inPoint`, `outPoint`, `start`, `end` cho cả `vClip` (`V1`) và `aClip` (`A1`) trong cùng một nhịp, sau đó chạy `check-sequence-sync` để xác nhận `drift = 0`.
+3. **Cắt bỏ nền mờ & Che logo tốc độ cao (< 15 giây cho 100 clip):**
+   - Gửi batch trực tiếp qua HTTP bridge `http://127.0.0.1:47823/command` của `premiere-cli` (thay vì tạo hàng trăm subprocess `python.exe` rời rạc).
+   - **Cắt bỏ nền mờ (`Crop` `AE.ADBE AECrop` trên `V1`):** Áp `Crop` (`Left` / `Right` `15.5% – 35%`) trực tiếp lên clip `V1` có viền mờ hai bên — tự động cắt bay toàn bộ logo nằm ở dải nền mờ (`LA`, `FAILARMY`, `TMAX`, `REC`, `MEC`, `22`).
+   - **Chuẩn hóa `Scale` & Đẩy logo sát mép (`V1`):** Tính `fit_scale = min(1920/w, 1080/h) * 100`. Nếu clip có watermark sát mép trên/dưới (`ViralHog`, `DUMPERT`, `ring`, `TMAX`, `LA`, `Reddit`), nhân thêm `~1.15x` (`1920x1080 -> 115%`, `1080x1920 -> 65%`, `720x1280 -> 95%`, `1280x720 -> 168%`) để đẩy watermark ra ngoài khung `1080p` (đúng chuẩn `kb102`).
+   - **Che logo nằm sâu trong hình (`Track V2` Shield):** Gọi `set-item-in-out` khớp `inPointSeconds`/`outPointSeconds` của `V1`, gọi `add-to-timeline` lên `V2` (`trackIndex: 1`, tự động dọn audio thừa trên `A2` mà không chạm vào `A1`), đồng bộ `Scale`, rồi áp `Gaussian Blur` (`AE.Impact_Blur_FX`, `Amount: 20`) + `Crop` (`Edge Feather: 15`) khoanh đúng tọa độ logo.
+
+### Bước 4.5: Kỹ Nghệ Dựng Intro Kênh ITV (`kb103` x `FailSide` Hybrid Protocol)
+Khi người dùng yêu cầu viết voice intro, tạo intro hoặc dựng phần mở đầu (`0.00s -> ~16.27s`) cho video kênh ITV (`intro_blueprint` trong `channel_profiles.json`):
+1. **Giọng Đọc & Công Thức "Xào Lại Intro Đối Thủ" Với ElevenLabs `eleven_v3` (`Track A2` — Voice `ITV 5` / `ITLDKaHYPRfCyyrPpZu2`):**
+   - **Cấu hình ElevenLabs (`e:\ITV\itv_voice_config.json`):** Voice `ITV 5` (**Voice ID: `ITLDKaHYPRfCyyrPpZu2`**, `gen_sp100_s50_sb75_v3`: Speed `1.00`, Stability `50%`, Similarity Boost `75%`, Style `0.0`, Speaker Boost `true`, Model `eleven_v3`). Kịch bản dài `18 – 36` từ (`9.5s – 14.8s` file gốc).
+   - **Quy Trình 3 Bước "Xào Lại" (Spin) Voice Intro Từ Kênh Đối Thủ:**
+     1. *Bước 1 — Bóc băng & Tạm dịch câu Intro đối thủ (`00:00:00 -> 00:00:15`):* Trích xuất nguyên văn câu mở đầu từ video đối thủ (ví dụ FailSide Moment `https://youtu.be/0ZjT5dOG8zY` ở `00:00:03 -> 00:00:12`: `"Hello everyone! Are you ready to watch this one and laugh out loud? Let's get started then!"` — *Xin chào mọi người! Các bạn đã sẵn sàng xem video này và cười thật lớn chưa? Nào, bắt đầu thôi!*).
+     2. *Bước 2 — Viết lại (Paraphrase & Amplify) sang văn phong ITV:*
+        - Viết **IN HOA TOÀN BỘ (ALL CAPS)** để ép model `eleven_v3` đẩy lực giọng cao.
+        - Kéo dài nguyên âm lời chào đầu (`HELLOOOO, EVERYONE!`), rút gọn câu hỏi kèm `?!` (`READY FOR A GOOD LAUGH?!`), chèn thêm mệnh đề giữ chân khán giả ngăn cách bằng dấu gạch ngang `—` (`YOU'RE IN THE RIGHT PLACE — SO SIT BACK, KEEP YOUR EYES OPEN, AND GET READY!`), và bỏ từ thừa (`then`) ở câu chốt kèm `!!!` (`LET'S GET STARTED!!!`).
+     3. *Bước 3 — Xuất File MP3 Trực Tiếp Qua `elevenlabs` CLI Với Cặp Thẻ Lệnh `eleven_v3`:*
+        - Đặt thẻ `[absurdist narration, accelerando, rushed, extreme fast]` ở đầu kịch bản và thẻ `[accelerando, rushed, energetic, shouting]` ngay trước câu chốt `LET'S GET STARTED!!!`, rồi gọi trực tiếp `elevenlabs say` (đã xác thực OAuth sẵn trong hệ thống):
+          ```powershell
+          elevenlabs say "[absurdist narration, accelerando, rushed, extreme fast] HELLOOOO, EVERYONE! READY FOR A GOOD LAUGH?! YOU'RE IN THE RIGHT PLACE — SO SIT BACK, KEEP YOUR EYES OPEN, AND GET READY! [accelerando, rushed, energetic, shouting] LET'S GET STARTED!!!" --voice ITLDKaHYPRfCyyrPpZu2 --model eleven_v3 --output "E:\ITV\Project\<kb>\intro_vo.mp3"
+          ```
+        - **Kiểm tra phát âm bằng AI Audio (`view_file`):** Khi kết hợp `extreme fast` với dấu `—` (như `PLACE —`), `eleven_v3` đôi khi nuốt âm cuối nghe giống `"right plan"` (như ở bản thu `ef4f12b1` so với bản chuẩn `kb104`). Luôn nghe lại file MP3; nếu bị nuốt âm thì đổi `—` thành `!` hoặc `,` rồi xuất lại.
+   - **Quy Tắc Cắt Rải Nhịp Voiceover Linh Hoạt Theo Intro Text (`Dynamic Text-Clause & Impact Slicing` — KHÔNG Hardcode Số Segment):**
+     - **Tuyệt đối không cố định cứng 3 hay 5 segment.** Số lượng đoạn cắt trên `Track A2` biến thiên linh hoạt (từ `2` đến `6+` segments như thực tế qua `kb98..kb104`: `kb98/kb99/kb102` = 2 đoạn, `kb101/kb103` = 3 đoạn, `kb104` = 5 đoạn, `kb100` = 6 đoạn) phụ thuộc vào:
+       1. **Cấu trúc vế câu của Intro Text:** Chỉ cắt tại các ranh giới ngắt câu tự nhiên (`!`, `?!`, `—`, `,`, `.`).
+       2. **Điểm nổ âm thanh hiện trường (`A1` Scream / Crash Climax):** Mở khe nghỉ ở những chỗ clip Teaser có tiếng hét thất thanh, tiếng rên hài hước hoặc tiếng nổ lớn để tạo hiệu ứng **Đối đáp âm thanh (Call-and-Response)** giữa Voiceover và âm thanh gốc.
+       3. **Độ chênh lệch thời lượng giữa file MP3 gốc (`9.5s – 14.8s`) và tổng chuỗi Teaser (`12.5s – 17.5s`):** Nếu câu thoại ngắn/đọc nhanh (`extreme fast`), tách theo từng vế câu ngắn để rải đều tới sát thẻ `Warning` (câu chốt `LET'S GET STARTED!!!` kết thúc trước thẻ `Warning` khoảng `0.4s – 0.85s`).
+
+2. **7 Bí Quyết Dựng Intro Đỉnh Cao Học Từ `FailSide Moment` (`youtu.be/0ZjT5dOG8zY`, `0.00s -> 18.65s`):**
+   - **Bí quyết 1 — "Hook Loop" (Lấy Climax của Clip #1 Thân Bài làm Clip #1 Mở Màn Intro):**
+     - Mở màn ở `0.00s -> 1.30s` bằng chính khoảnh khắc tai nạn đỉnh điểm của **Clip đầu tiên sau thẻ `WARNING` (`18.65s`)** (ví dụ: cú trượt thang rơi xuống đất ở `0.00s..1.30s`, sau đó ở `18.65s` chiếu lại trọn vẹn từ Setup đến Aftermath của vụ rơi thang đó). Kỹ thuật này tạo vòng lặp tò mò hoàn hảo giữ chân người xem đi qua thẻ `WARNING` (đã áp dụng tương tự ở `kb101`, `kb102`).
+   - **Bí quyết 2 — "Pre-VO Cold Open" (Nổ 1–2 cú va chạm trước hoặc ngay quanh lời chào đầu):**
+     - Ở `FailSide`, `0.00s -> 2.87s` là **2 cú tai nạn liên hoàn** (rơi thang `0..1.30s` + cây đổ ầm xuống đường `1.30..2.87s` kèm tiếng *"Ohhh!"*) hoàn toàn chưa có Voiceover, đến clip thứ 3 (`2.87s` — xà beng bật vào mặt) mới cất câu chào *"Hello everyone!"*.
+     - Ở chuẩn lai `ITV`, có thể mở lời chào *"HELLOOOO, EVERYONE!"* ngay ở `Part A` (`0.00s -> ~1.58s`) rồi **bắt buộc ngắt im lặng VO (`~1.58s -> ~2.54s`)** để cú nổ `Part B` của Clip #1 + chuyển cảnh `AE.Impact_Cross_Zoom` vang lên 100% công lực.
+   - **Bí quyết 3 — "Zero-Setup & Scream-Peak Cut" (Cắt Sát Đỉnh Va Chạm & Ngắt Ngay Đỉnh Tiếng Hét):**
+     - Chuỗi 10–12 clip Teaser trong Intro (mỗi clip `0.75s – 1.90s`, trung bình `~1.3s/clip`) **cắt bỏ hoàn toàn đoạn chờ Setup**, vào thẳng `0.3s – 0.6s` trước va chạm và **cắt chuyển cảnh ngay tại đỉnh tiếng la hét / tiếng đâm sầm** (Cliffhanger Cut) để kích thích người xem chờ xem bản đầy đủ trong video.
+   - **Bí quyết 4 — "Call-and-Response Audio Weaving" (Xen Kẽ Đối Đáp Giữa Voiceover & Tiếng Hiện Trường `A1`):**
+     - Không để Voiceover đọc đè kín mít lên tiếng động gốc. Giữa các câu thoại luôn chừa "khoảng thở hành động" để tiếng xe đâm nổ túi khí, tiếng cô gái hét toáng, hoặc tiếng rên hài hước (như tiếng *"Ư ư ư..."* lúc lao xe máy xuống mương ở `11.80s..12.80s` ngay sau câu hỏi *"laugh out loud?"*) vang lên như một lời "đáp trả" câu hỏi của người dẫn truyện.
+   - **Bí quyết 5 — "Camera-Hit Finale Jump-Scare" (Cú Đập Thẳng Vào Ống Kính Ngay Trước Thẻ `Warning`):**
+     - Clip cuối cùng của chuỗi Teaser (ngay sau câu chốt *"Let's get started!"* ở `~14.5s..16.5s`) luôn ưu tiên chọn cảnh **vật thể bay đập thẳng vào ống kính camera / kính chắn gió** hoặc cú nổ/lật xe trực diện màn hình, dùng chính cú va chạm vào màn hình đó làm bàn đạp bung hiệu ứng `AE.Impact_Cross_Zoom` sang thẻ **`WARNING`**.
+   - **Bí quyết 6 — Tối Giản Chữ Trên Khung Hình Teaser Để Không Che Điểm Nổ:**
+     - `FailSide` giữ khung hình Teaser sạch bóng chữ lớn (chỉ gắn dòng chữ nhỏ `*NO ONE WAS INJURED IN THIS VIDEO*` ở góc dưới trái khi cần) để mắt khán giả khóa chặt vào điểm va chạm. Khi áp dụng trên kênh `ITV`, phụ đề động `Komika Axis` trên `Track V8` phải đặt gọn ở sát đáy `[0.5008, 0.8796]` và **chỉ xuất hiện đúng lúc có tiếng Voiceover**, tự động biến mất trong các khoảng nghỉ hành động và trước thẻ `Warning`.
+   - **Bí quyết 7 — Cấu Trúc 10-Track Kỹ Thuật Chuẩn Studio ITV (`kb103` / `kb104`):**
+     - **Razor Split `Part A` / `Part B` + `Constant Power` Crossfade (`V1`, `V3`, `A1`):** Mọi clip teaser được cắt đôi ngay tại frame bắt đầu va chạm (`Part A` dưới VO gắn `Hard Limiter Input Boost = +1.0 dB`; `Part B` tại đỉnh va chạm tăng `Input Boost = +3.0 dB` hoặc tháo `Hard Limiter` khi VO nghỉ), bọc `Constant Power` (`0.25s – 0.50s`) tại mọi mối nối trên `A1`.
+     - **Thẻ `Warning` (`dur 0.83s` trên `V1` & `V3`):** Đặt Nested Sequence `Warning` (`src 0.92s..1.75s`, `Scale 114.83%`), bọc `AE.Impact_Cross_Zoom` (`0.50s`) trên `V1`, `V2`, `V3`, và **ngắt trống `V6` (`Only-Logo.png`) + `V7` (`wtm.png`)** trong suốt `0.83s` thẻ `Warning`.
+     - **Nhạc Hiệu Mở Đầu `A6` (`Hadeus.mp4`):** Keyframe `Level` 4 mốc chuẩn: `0.1778 @ 0.71s` (riff mở màn) $\to$ hạ xuống `0.0526 @ 1.22s` (nằm dưới VO) $\to$ đẩy lên `0.1446` ngay khi hết câu *"LET'S GET STARTED!!!"* để bùng nổ vào thẻ `Warning` + `Custom Fade` kết thúc đúng hết thẻ `Warning`.
+
+### Bước 5: Tự Tiến Hóa & Học Hỏi Qua OpenSpace
 - Mọi trường hợp cắt lỗi hoặc phản hồi của người dùng được ghi nhận vào OpenSpace trace.
-- Gọi `fix_skill` để tự động điều chỉnh ngưỡng thời lượng và mẫu nhận diện câu chuyện cho các lần cắt tiếp theo.
+- Gọi `fix_skill` để tự động điều chỉnh ngưỡng thời lượng, cấu hình kênh và mẫu nhận diện câu chuyện cho các lần cắt tiếp theo.
+

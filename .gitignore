@@ -36,7 +36,12 @@ test_*/
 
 # Dynamic pipeline state files
 state/*.json
+state/storyboards/
 !state/.gitkeep
+
+# External cloned tool repositories (keep custom local scripts like tools/premiere_cli_bridge_daemon.py)
+tools/premiere-ai/
+tools/premiere-cli/
 
 
 # Ignore nested .skill files in subdirectories (only keep packages/*.skill)

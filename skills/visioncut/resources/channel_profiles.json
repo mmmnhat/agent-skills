@@ -1,0 +1,565 @@
+{
+  "channels": {
+    "itv_moments": {
+      "name": "ITV Moments",
+      "workspace_pattern": "E:\\ITV\\Project\\kb*",
+      "resolution": [1920, 1080],
+      "fps": 23.976,
+      "tracks": {
+        "V1": "Primary Video Clips (or 500% Scale + Gaussian Blur Amount=3 background duplicate when using full 10-track ITV template)",
+        "V2": "In-frame Logo Blur Shields (or Full-timeline Brand Frame PNG Opacity=99%, Scale=115%x114.77% in 10-track template)",
+        "V3": "Primary Active Video Clips in 10-track template (with Crop Left/Right for pillarboxed clips, Scale edge-crop, and Masked Gaussian Blur Amount=10..15)",
+        "V4": "Animated Emoji Impact Shields (covering strong impacts to face/head/body organs, 0.25s..0.50s, keyframed Position)",
+        "V5": "Highlight / MC Overlays",
+        "V6": "Top-Left Channel Logo (Only-Logo.png, Transform Position=[-0.2564, -0.3091], Scale=25%x100% + Drop Shadow)",
+        "V7": "Bottom-Center Subtle Watermark (wtm.png, Position=[0.5, 0.9259], Scale=25%, Opacity=3%)",
+        "V8": "Safety & Context Essential Graphics Text (*HE'S FINE, *DON'T TRY THIS, etc., Position=[0.015625, 0.972222])",
+        "V9": "Subscribe CTA Overlays (Free YouTube CTA)",
+        "V10": "TV Static Transitions (0.38s at act boundaries)",
+        "A1": "Original Camera Audio (100% frame-synced with primary video, Essential Sound tagged as Ambience with -25dB Auto-Ducking against Dialog)",
+        "A2": "AI Voiceover (ElevenLabs, Essential Sound tagged as Dialog with Graphic EQ 10-Band + Dynamics Processing + DeEsser)",
+        "A3": "Comedy / Impact / Reaction / Censor SFX (Essential Sound tagged as SFX with Auto-Match Loudness)",
+        "A4": "Secondary SFX (Reserved / Empty in kb100)",
+        "A5": "Background Music (Essential Sound tagged as Music with Auto-Match Loudness + -25dB Auto-Ducking against Dialog)",
+        "A6": "Intro Hook Audio (Hadeus.mp4, 0..15.14s)",
+        "A7": "Subscribe CTA Audio (Track Fader -15.0 dB, synced with V9)",
+        "A8": "TV Static Transition Audio (0.38s, synced with V10)"
+      },
+      "unblur_policy": {
+        "method": "premiere_crop_effect",
+        "effect_name": "Crop",
+        "match_name": "AE.ADBE AECrop",
+        "sidebar_logos_auto_cropped": ["LA", "FAILARMY", "FAILSIDE MOMENT", "TMAX", "REC", "MEC", "22"],
+        "pillarbox_crop_range_percent": [25.0, 34.5]
+      },
+      "scale_and_logo_policy": {
+        "base_scale_formula": "min(1920 / width, 1080 / height) * 100",
+        "edge_logo_zoom_factor": 1.15,
+        "edge_crop_scales_16x9": [105.47, 108.0, 112.0, 114.0, 115.0, 117.0, 118.0, 119.0, 121.0, 122.0, 125.0, 127.0, 144.0],
+        "preset_scales_with_edge_logo": {
+          "1920x1080": 115.0,
+          "1280x720": 168.0,
+          "1080x1920": 65.0,
+          "720x1280": 95.0,
+          "576x1024": 118.0,
+          "480x854": 142.0,
+          "320x568": 212.0
+        },
+        "in_clip_masked_gaussian_blur": {
+          "effect_name": "Gaussian Blur",
+          "match_name": "AE.Impact_Blur_FX",
+          "default_params": {
+            "Amount": 15,
+            "Thickness": 15,
+            "Uniform Blur": true,
+            "Edge Behavior": 1
+          },
+          "small_badge_params": {
+            "Amount": 10,
+            "Thickness": 10
+          },
+          "subcomponent_mask": {
+            "display_name": "Mask2",
+            "match_name": "AE.ADBE AEMask2",
+            "Type": 2,
+            "Feather": 35.0,
+            "Opacity": 100.0,
+            "Expansion": 0.0,
+            "moving_logo_expansion": 50.0,
+            "common_dual_mask_positions": [
+              {
+                "name": "Top-Left Logo + Bottom-Center Text (FailSide Moment Variant A)",
+                "masks": [[0.0547, 0.0657], [0.5007, 0.9477]]
+              },
+              {
+                "name": "Top-Right Clock Logo + Bottom-Center Text (FailSide Moment Variant B)",
+                "masks": [[0.9060, 0.0871], [0.4937, 0.9663]]
+              }
+            ]
+          },
+          "multi_watermark_rule": "Add a second Gaussian Blur (AE.Impact_Blur_FX) component on the same clip when two independent watermarks require separate blur instances."
+        },
+        "deep_logo_v2_shield": {
+          "effects": [
+            {"name": "Gaussian Blur", "matchName": "AE.Impact_Blur_FX", "Amount": 20, "Thickness": 20},
+            {"name": "Crop", "matchName": "AE.ADBE AECrop", "Edge Feather": 15}
+          ]
+        }
+      },
+      "emoji_impact_shield_policy": {
+        "purpose": "Cover strong physical impacts to the face, head, or body organs (tools kicking back, objects hitting face, head-first slams)",
+        "asset_dir": "E:\\Video Asset\\Animated emojis",
+        "preferred_assets": [
+          "mnhat_emoji_37.gif",
+          "512 (6).gif",
+          "512 (5).gif",
+          "512 (2).gif",
+          "512 (4).gif"
+        ],
+        "duration_seconds_range": [0.25, 0.50],
+        "scale_range": [12.0, 35.5],
+        "motion_tracking": "3-4 Position keyframes (timeVarying=true) following the head/body recoil over the 6-12 impact frames"
+      },
+      "safety_context_graphics_policy": {
+        "purpose": "Provide bottom-left safety/context disclaimer overlays spanning the full duration of intense/dangerous clips",
+        "component": "AE.ADBE Text (Essential Graphics)",
+        "position_normalized": [0.015625, 0.972222],
+        "scale": 100.0,
+        "context_templates": [
+          "*HE’S FINE",
+          "*SHE’S FINE",
+          "*ALL SAFE",
+          "*EVERYONE IS SAFE",
+          "*ALL GOOD",
+          "*DON’T COPY THIS",
+          "*DON’T TRY",
+          "*DON’T TRY THIS"
+        ]
+      },
+      "sfx_placement_policy": {
+        "track": "A3",
+        "asset_dir": "E:\\Video Asset\\SFX",
+        "density": "~1 SFX per 20-25s (selective, high-impact moments only; ~23 SFX in 8m15s)",
+        "categories": {
+          "physical_impacts_and_falls": [
+            "bonk.mp3",
+            "metallic-bonk-and-rattle.mp3",
+            "taco-bell-bong.mp3",
+            "bamboo-hit.mp3",
+            "tac.mp3",
+            "car-brake.mp3",
+            "body-impact.mp3",
+            "hollywoodedge-slide-whistle-in-out-crt057601.mp3"
+          ],
+          "meme_and_cartoon_reactions": [
+            "metal-gear-solid.mp3",
+            "oof.mp3",
+            "rubber-duck.mp3",
+            "boin4.mp3",
+            "windows-xp-shutdown.mp3",
+            "windows-error.mp3",
+            "record-scratch.mp3",
+            "duck-quack.mp3"
+          ],
+          "profanity_censor": [
+            "censor-beep-1.mp3"
+          ]
+        },
+        "timing_rules": [
+          "Align SFX start with the exact physical climax/impact or comedic reaction frame (+0.7s to +4.3s inside the clip, never blindly at the cut point).",
+          "Avoid overlapping with A2 Voiceover (91% of SFX in kb100 occur in gaps where A2 VO is silent).",
+          "Allow resonant/long-tail SFX (oof, metallic-bonk-and-rattle, taco-bell-bong, car-brake, metal-gear-solid, duck-quack) to L-cut across the scene transition into the next clip rather than hard-cutting at clip end.",
+          "For profanity censoring, place censor-beep-1.mp3 (~0.21s) on A3 while keyframing A1 volume down over the swear word."
+        ]
+      },
+      "audio_track_mixer_policy": {
+        "description": "Track-level dynamics and peak limiting in AudioTrackGroup (Audio Track Mixer) learned from kb100.prproj",
+        "tracks": {
+          "Master": {
+            "Slot1": {
+              "effect": "Hard Limiter",
+              "matchName": "e0b23f05-f1a7-4ef7-9b50-7ec3e3002058",
+              "Maximum_Amplitude_dB": -1.2,
+              "Maximum_Amplitude_norm": 0.94,
+              "Input_Boost_dB": 3.7,
+              "Input_Boost_norm": 0.6867,
+              "Look_Ahead_Time_ms": 7.0,
+              "Look_Ahead_Time_norm": 0.1333,
+              "Release_Time_ms": 100.0,
+              "Release_Time_norm": 0.375
+            }
+          },
+          "A1_Camera_Audio": {
+            "Slot1": {
+              "effect": "Single-band Compressor",
+              "matchName": "2da3e2bc-5005-481c-bbeb-7689d3169edf",
+              "Gain_dB": 2.0,
+              "Gain_norm": 0.5333,
+              "Threshold_dB": -15.0,
+              "Threshold_norm": 0.75,
+              "Ratio": "5:1",
+              "Ratio_norm": 0.1379,
+              "Attack_ms": 10.0,
+              "Attack_norm": 0.01,
+              "Release_ms": 80.0,
+              "Release_norm": 0.016,
+              "Auto_Makeup_Gain": false
+            },
+            "Slot2": {
+              "effect": "Hard Limiter",
+              "matchName": "e0b23f05-f1a7-4ef7-9b50-7ec3e3002058",
+              "Maximum_Amplitude_dB": -1.2,
+              "Maximum_Amplitude_norm": 0.94,
+              "Input_Boost_dB": 3.7,
+              "Input_Boost_norm": 0.6867,
+              "Look_Ahead_Time_ms": 7.0,
+              "Release_Time_ms": 100.0
+            }
+          },
+          "A2_Voiceover": {
+            "Slot1": {
+              "effect": "Hard Limiter",
+              "matchName": "e0b23f05-f1a7-4ef7-9b50-7ec3e3002058",
+              "Maximum_Amplitude_dB": -4.0,
+              "Maximum_Amplitude_norm": 0.80,
+              "Input_Boost_dB": 3.7,
+              "Input_Boost_norm": 0.6867,
+              "Look_Ahead_Time_ms": 7.0,
+              "Release_Time_ms": 100.0
+            }
+          },
+          "A3_A4_SFX": {
+            "Slot1": {
+              "effect": "Hard Limiter",
+              "matchName": "e0b23f05-f1a7-4ef7-9b50-7ec3e3002058",
+              "Maximum_Amplitude_dB": -6.0,
+              "Maximum_Amplitude_norm": 0.70,
+              "Input_Boost_dB": 3.7,
+              "Input_Boost_norm": 0.6867,
+              "Look_Ahead_Time_ms": 7.0,
+              "Release_Time_ms": 100.0
+            }
+          },
+          "A5_BGM": {
+            "Slot1": {
+              "effect": "Hard Limiter",
+              "matchName": "e0b23f05-f1a7-4ef7-9b50-7ec3e3002058",
+              "Maximum_Amplitude_dB": -7.0,
+              "Maximum_Amplitude_norm": 0.65,
+              "Input_Boost_dB": 3.7,
+              "Input_Boost_norm": 0.6867,
+              "Look_Ahead_Time_ms": 7.0,
+              "Release_Time_ms": 100.0
+            }
+          },
+          "A7_CTA": {
+            "Fader_Volume_dB": -15.0,
+            "Fader_Volume_linear": 0.017783
+          }
+        }
+      },
+      "essential_sound_policy": {
+        "description": "Clip-level Essential Sound Panel (ESP.*) tags, Auto-Match Loudness, Clarity chains, and Auto-Ducking learned from kb100.prproj",
+        "A1_Intro_Hook_Clips": {
+          "time_range_sec": [0.0, 16.27],
+          "inserted_effect": "Hard Limiter",
+          "EssentialSound_EffectOrder": 100,
+          "Maximum_Amplitude_dB": -0.1,
+          "Maximum_Amplitude_norm": 0.998,
+          "part_A_setup_under_vo": {
+            "Input_Boost_dB": 1.0,
+            "Input_Boost_norm": 0.5333,
+            "cold_open_or_cta_lead_in_norm": 0.5
+          },
+          "part_B_climax_impact_peak": {
+            "Input_Boost_dB": 3.0,
+            "Input_Boost_norm": 0.6,
+            "silent_vo_gap_policy": "Remove Hard Limiter on Cold Open Part B (1.54s..2.54s) and Final Teaser Part B (14.47s..16.27s) so raw crash/scream rings out at full dynamic range while A2 VO is silent"
+          },
+          "crossfades": "Apply 0.25s..0.50s Constant Power audio transition across every teaser clip boundary and between Part A / Part B; apply 1.13s Constant Power tail fade under Warning card"
+        },
+        "A1_Main_Clips": {
+          "ESP_Tag": "ambience",
+          "ESP_ClipMixTypeID": 5,
+          "ESP_PresetGuid": "b3526c89-21a6-48b6-bb5e-7f323a45a206",
+          "Auto_Match_Loudness": true,
+          "Ducking": {
+            "enabled": true,
+            "duck_against": "Dialog (ESP.DuckingSection.2 = 34)",
+            "sensitivity": 3,
+            "duck_amount_dB": -25.0,
+            "fades_ms": 200,
+            "inserted_effect": "Amplify (0.6667 normal -> 0.4931 ducked over 200ms fade)"
+          }
+        },
+        "A2_Voiceover_Clips": {
+          "ESP_Tag": "dialog",
+          "ESP_ClipMixTypeID": 1,
+          "ESP_PresetGuid": "ef6075c2-9036-4cc1-8c37-3e31efb2702f",
+          "Auto_Match_Loudness": true,
+          "Clarity_Chain": [
+            "Graphic Equalizer (10 Bands) (ESP.EQSection enabled, Band6=0.5084, Band7=0.5288, Band8=0.5120)",
+            "Dynamics Processing (ESP.CompressorSection enabled)",
+            "DeEsser (Threshold=0.7803, Attack=0.1998, Release=0.1837, CenterFreq=0.2089, Bandwidth=0.3250)"
+          ],
+          "Enhance_Speech_Vocal_Enhancer": true
+        },
+        "A3_SFX_Clips": {
+          "ESP_Tag": "sfx",
+          "ESP_ClipMixTypeID": 4,
+          "ESP_PresetGuid": "cd445245-b028-4a97-86cd-61b0a660f087",
+          "Auto_Match_Loudness": true
+        },
+        "A5_BGM_Clips": {
+          "ESP_Tag": "music",
+          "ESP_ClipMixTypeID": 2,
+          "ESP_PresetGuid": "4e03f172-b05e-4b19-92bd-b9d0e0c02179",
+          "Auto_Match_Loudness": true,
+          "Ducking": {
+            "enabled": true,
+            "duck_against": "Dialog (ESP.DuckingSection.2 = 34)",
+            "sensitivity": 3,
+            "duck_amount_dB": -25.0,
+            "fades_ms": 200,
+            "inserted_effect": "Amplify (0.6667 normal -> 0.4931 ducked over 200ms fade)"
+          }
+        }
+      },
+      "intro_blueprint": {
+        "description": "ITV Moments x FailSide Moment Hybrid Intro Engineering Spec learned from kb103.prproj, kb98..kb104, E:\\Video Asset\\Brand - ITV\\Intro, and FailSide Moment #277 (youtu.be/0ZjT5dOG8zY)",
+        "total_duration_sec_range": [13.0, 18.5],
+        "kb103_reference_duration_sec": 16.27,
+        "voiceover_spec": {
+          "elevenlabs_voice_name": "ITV 5",
+          "elevenlabs_voice_id": "ITLDKaHYPRfCyyrPpZu2",
+          "elevenlabs_filename_suffix": "ITV 5_gen_sp100_s50_sb75_v3.mp3",
+          "elevenlabs_settings": {
+            "speed": 1.0,
+            "stability": 0.5,
+            "similarity_boost": 0.75,
+            "style": 0.0,
+            "use_speaker_boost": true,
+            "model": "eleven_v3"
+          },
+          "elevenlabs_cli_commands": {
+            "generate_mp3": "elevenlabs say \"[absurdist narration, accelerando, rushed, extreme fast] <INTRO_BODY_ALL_CAPS> [accelerando, rushed, energetic, shouting] LET'S GET STARTED!!!\" --voice ITLDKaHYPRfCyyrPpZu2 --model eleven_v3 --output <out.mp3>",
+            "generate_with_timestamps": "elevenlabs text-to-speech convert_with_timestamps --params '{\"voice_id\":\"ITLDKaHYPRfCyyrPpZu2\"}' --json '{\"text\":\"...\",\"model_id\":\"eleven_v3\",\"voice_settings\":{\"stability\":0.5,\"similarity_boost\":0.75,\"style\":0.0,\"speed\":1.0,\"use_speaker_boost\":true}}'"
+          },
+          "word_count_range": [18, 36],
+          "raw_audio_duration_sec_range": [9.5, 14.8],
+          "competitor_spinning_and_v3_prompt_formula": {
+            "workflow_overview": "Extract competitor's intro hook (00:00:00..00:00:15, e.g., FailSide Moment), translate for meaning check, rewrite/spin into ALL-CAPS high-energy ITV copy (elongated greeting + question hook + sit-back/eyes-open directive + launch shout), and wrap with ElevenLabs v3 Dual Audio Tags.",
+            "step_1_extract_competitor": {
+              "example_source": "https://youtu.be/0ZjT5dOG8zY (00:00:03 -> 00:00:12)",
+              "competitor_raw_quote": "Hello everyone! Are you ready to watch this one and laugh out loud? Let's get started then!",
+              "vietnamese_meaning": "Xin chào mọi người! Các bạn đã sẵn sàng xem video này và cười thật lớn chưa? Nào, bắt đầu thôi!"
+            },
+            "step_2_spin_and_amplify_rules": [
+              "Write ENTIRE script in ALL CAPS to drive high vocal projection in eleven_v3.",
+              "Elongate opening greeting vowel: 'HELLOOOO, EVERYONE!' or 'HEYYYY, EVERYONE!'",
+              "Convert generic question into punchy hook ending with '?!': e.g., 'READY FOR A GOOD LAUGH?!'",
+              "Insert a high-retention viewer directive separated by an em-dash '—': e.g., 'YOU'RE IN THE RIGHT PLACE — SO SIT BACK, KEEP YOUR EYES OPEN, AND GET READY!'",
+              "Strip weak trailing words like 'then' from the CTA and end with triple exclamation marks: 'LET'S GET STARTED!!!'"
+            ],
+            "step_3_elevenlabs_v3_dual_tag_template": "[absurdist narration, accelerando, rushed, extreme fast] {GREETING_ALL_CAPS}! {HOOK_QUESTION_ALL_CAPS}?! {RETENTION_DIRECTIVE_ALL_CAPS}! [accelerando, rushed, energetic, shouting] {LAUNCH_CTA_ALL_CAPS}!!!",
+            "verified_prompt_example": "[absurdist narration, accelerando, rushed, extreme fast] HELLOOOO, EVERYONE! READY FOR A GOOD LAUGH?! YOU'RE IN THE RIGHT PLACE — SO SIT BACK, KEEP YOUR EYES OPEN, AND GET READY! [accelerando, rushed, energetic, shouting] LET'S GET STARTED!!!",
+            "phonic_qc_rule": "Always inspect generated audio with AI Audio (view_file): 'extreme fast' + em-dash ('PLACE —') can occasionally cause eleven_v3 to swallow final consonants (e.g., sounding like 'right plan' in take ef4f12b1 vs clean 'right place' in kb104 take 2026-10-16T09_23_51). Re-generate or replace '—' with ',' or '!' if a word is clipped."
+          },
+          "pacing_modes": {
+            "dynamic_a2_slicing_rule": {
+              "core_principle": "NEVER hardcode a fixed number of A2 voiceover segments (not fixed to 3 or 5). The number of A2 segments dynamically adapts (from 2 to 6+ segments) based on the Intro Text's natural clause boundaries (punctuation: '!', '?!', '—', ',', '.') and the duration gap between the raw MP3 and the Teaser Montage.",
+              "mandatory_split_1_greeting": "Always split after the opening greeting ('HELLOOOO, EVERYONE!' / 'Hello everyone!', ~0.7s..1.8s) and leave a 0.55s..1.35s silence gap on A2 so Clip #1's Cold-Open crash climax + Impact Cross Zoom transition hit at full volume.",
+              "adaptive_body_splits": "Split the remaining VO only at natural text clause breaks where needed to (a) let loud mid-intro physical crashes/SFX punch through, and (b) pace the text evenly across the teaser clips so 'LET'S GET STARTED!!!' finishes ~0.4s..0.85s before the Warning card.",
+              "verified_historical_distribution": {
+                "2_segments": "kb98 (0.00..0.67s | 2.04..9.80s), kb99 (0.00..1.50s | 2.04..13.35s), kb102 (0.00..1.54s | 2.84..13.56s) — when body clauses flow continuously and match teaser length.",
+                "3_segments": "kb101 (0.00..1.63s | 2.79..7.05s | 8.09..16.64s), kb103 (0.00..1.84s | 2.54..6.30s | 6.59..15.43s) — 1 extra breath gap after the main hook question ('...?!').",
+                "5_segments": "kb104 (0.00..1.58s | 2.46..4.00s | 4.13..5.51s | 6.09..7.05s | 7.55..12.22s) — short multi-clause text ('READY FOR A GOOD LAUGH?!' / 'YOU'RE IN THE RIGHT PLACE —' / 'SO SIT BACK,') spaced across teaser hits.",
+                "6_segments": "kb100 (0.00..1.50s | 2.71..3.63s | 3.84..4.55s | 4.75..5.71s | 6.30..10.80s | 11.43..13.56s) — staccato imperative clauses ('Sit back,' / 'relax,' / 'and get ready —') sliced per clause."
+              }
+            },
+            "mode_A_itv_clause_driven_split_hook": {
+              "description": "4-beat narrative script razor-split dynamically on Track A2 (2..6+ segments depending on text clauses) with a mandatory Cold-Open crash gap after the greeting and optional clause-boundary pauses.",
+              "beats": [
+                {
+                  "beat": "1. Greeting",
+                  "timeline_sec": [0.0, 1.84],
+                  "copy_examples": ["HELLOOOO, EVERYONE!", "Hello everyone!", "Hey everyone!", "Welcome back!"]
+                },
+                {
+                  "beat": "GAP-1. Cold-Open Crash Window (Mandatory A2 Silence)",
+                  "timeline_sec": [1.84, 2.54],
+                  "duration_sec_range": [0.55, 1.35],
+                  "purpose": "Let Clip #1 Part B physical crash/scream on A1 + Impact Cross Zoom transition hit at 100% raw volume with zero VO overlap."
+                },
+                {
+                  "beat": "2. Relatable Workplace / Question Hook",
+                  "timeline_sec": [2.54, 6.3],
+                  "copy_examples": [
+                    "READY FOR A GOOD LAUGH?!",
+                    "Ready to laugh at some of the most unbelievable idiots at work?",
+                    "Ever wonder what happens when confidence shows up, but common sense doesn't?!"
+                  ]
+                },
+                {
+                  "beat": "GAP-N. Text-Clause & Impact Breath Gaps (0 to 4+ gaps, Dynamic)",
+                  "duration_sec_range": [0.13, 1.05],
+                  "purpose": "Inserted dynamically at punctuation boundaries ('?!', '—', ',', '.') only when the intro text has distinct short clauses or when a mid-montage teaser impact/SFX needs room to breathe."
+                },
+                {
+                  "beat": "3. Escalation Promise / Retention Directive",
+                  "timeline_sec": [6.59, 13.43],
+                  "copy_examples": [
+                    "YOU'RE IN THE RIGHT PLACE — SO SIT BACK, KEEP YOUR EYES OPEN, AND GET READY!",
+                    "Stick around — this compilation is packed with bad decisions, big fails, and plenty of instant regret.",
+                    "Expect confusion, chaos, and plenty of laughs along the way!"
+                  ]
+                },
+                {
+                  "beat": "4. Launch CTA + Final Crash Tail",
+                  "timeline_sec": [13.43, 15.43],
+                  "copy_examples": [
+                    "LET'S GET STARTED!!!",
+                    "Let's jump right in!",
+                    "Let's dive right in!",
+                    "Let's get into it!"
+                  ],
+                  "post_cta_crash_window_sec": 0.85,
+                  "purpose": "Finish vocal CTA ~0.4s..0.85s before the Warning card so the final teaser clip's Part B crash lands directly into the Impact Cross Zoom -> Warning card."
+                }
+              ]
+            },
+            "mode_B_failside_3_spurt_breathing": {
+              "description": "FailSide Moment (#277, youtu.be/0ZjT5dOG8zY) ultra-sparse 3-spurt vocal pacing that leaves 2.0s..5.0s of pure unmasked camera audio + music riff between short vocal hooks.",
+              "beats": [
+                {
+                  "beat": "Cold Open Crash Streak (Pre-VO)",
+                  "timeline_sec": [0.0, 2.87],
+                  "purpose": "Open with 2 back-to-back raw physical fails/groans (e.g., ladder fall 0..1.30s + tree fall 1.30..2.87s) before any voiceover begins."
+                },
+                {
+                  "beat": "Spurt 1 — Greeting",
+                  "timeline_sec": [2.87, 4.0],
+                  "copy": "Hello everyone!"
+                },
+                {
+                  "beat": "Pure Action Window 1 (No VO)",
+                  "timeline_sec": [4.0, 9.01],
+                  "purpose": "5.0s rapid-fire montage of 4-5 clips where original screams, crashes, and upbeat guitar riff play uninterrupted."
+                },
+                {
+                  "beat": "Spurt 2 — Hook Question",
+                  "timeline_sec": [9.01, 11.8],
+                  "copy": "Are you ready to watch this one and laugh out loud?"
+                },
+                {
+                  "beat": "Pure Action Window 2 (No VO)",
+                  "timeline_sec": [11.8, 13.85],
+                  "purpose": "2.0s window for a comedic groan/crash reaction."
+                },
+                {
+                  "beat": "Spurt 3 — Launch CTA + Final Crash + Warning",
+                  "timeline_sec": [13.85, 18.65],
+                  "copy": "Let's get started then.",
+                  "purpose": "CTA at 13.85..15.20s -> Final windshield impact clip 15.22..16.95s -> WARNING card 16.95..18.65s."
+                }
+              ],
+              "failside_intro_mastery_7_rules": [
+                "1. Hook Loop (Clip #1 Teaser = Clip #1 Main Body Climax): Use the 1.3s climax of the very first post-Warning clip as Clip #1 of the Intro (0.00..1.30s) so when the Warning card ends (18.65s), the viewer immediately gets the full context/payoff of that exact crash.",
+                "2. Pre-VO Cold Open Shock: Hit the viewer with 1-2 immediate physical crashes/groans in the first 1.5s..2.8s before (or right around) the opening greeting.",
+                "3. Zero-Setup & Scream-Peak Hard Cut: Trim all teaser clips (0.8s..1.9s each) to start 0.3s..0.5s before impact and hard-cut right at the peak of the scream or crash (cliffhanger cut).",
+                "4. Call-and-Response Audio Weaving: Leave breathing windows between VO clauses so funny groans, airbag explosions, and screams answer the narrator's questions (e.g., 'laugh out loud?' at 11.8s immediately followed by the biker's 'Uhhh!' groan at 11.85s).",
+                "5. Camera-Hit Finale Jump-Scare: Make the final teaser clip right after 'Let's get started!' (15.22..16.95s) an object flying directly into the camera lens / windshield, using that impact to trigger the Zoom-Blur transition into the WARNING card.",
+                "6. Uncluttered Action Center: Keep the center of the frame 100% free of text overlays during teaser impacts so the viewer's eye locks onto the physical action.",
+                "7. Dynamic Text-Clause Slicing: Never hardcode segment counts (2..6+ segments); slice VO strictly according to the intro text's natural clauses and the timing of teaser impacts."
+              ]
+            }
+          },
+          "verified_scripts_archive": {
+            "kb98": "Hey everyone, buckle up! Today's compilation is packed with wild moments that hit fast and hard. Blink and you'll miss it. Let's get into it!",
+            "kb99": "Hello everyone! Buckle up for a front-row seat to some of the wildest workplace fails caught on camera! Stick around — trust me, the chaos only gets funnier from here! Let's dive right in!",
+            "kb100": "Hello everyone! Sit back, relax, and get ready — some of the craziest and funniest fails are about to come rolling your way! Let's get started!",
+            "kb101": "Hello everyone! Ready to laugh at some of the craziest workplace fails caught on camera?! This compilation is loaded with chaos, confusion, and moments you have to see to believe! Let's get started!",
+            "kb102": "Hello everyone! Ever wonder what happens when confidence shows up, but common sense doesn't?! Expect confusion, chaos, and plenty of laughs along the way! Let's jump right in!",
+            "kb103": "Hello everyone! Ready to laugh at some of the most unbelievable idiots at work?! Stick around — this compilation is packed with bad decisions, big fails, and plenty of instant regret! Let's get started!",
+            "kb104": "Hello everyone! Ready for a good laugh?! You're in the right place, so sit back, keep your eyes open, and get ready! Let's get started!",
+            "failside_277": "Hello everyone! ... Are you ready to watch this one and laugh out loud? ... Let's get started then.",
+            "new_intro_mau_1": "Hello everyone! Prepare to feel way better about your own career choices, because these guys are fighting for their lives out there! Are you ready? Let's go!",
+            "new_intro_mau_2": "Hello everyone! Ever feel like you're the only one doing actual work? These complete buffoons will definitely prove you right today. Let's check it out!",
+            "new_intro_mau_4": "Hello everyone! You are about to feel much better about your own job performance. These on-the-clock fails are truly reaching a whole new level of craziness! Let's get things started!",
+            "new_intro_mau_6": "What's up guys! If you thought your workday was rough, wait until you see these absolute disasters! These guys are out here surviving on pure luck. Ready for the chaos? Let's go!",
+            "new_intro_mau_7_1": "Hey everybody! Prepare to feel like a total genius today, because these absolute idiots are fighting for their lives out there! You ready for this? Let's go!",
+            "new_intro_mau_7_2": "Welcome back! Today's workers had one job... and somehow turned it into complete chaos. Get ready for unbelievable mistakes and hilarious instant regret moments. Let's dive in!"
+          }
+        },
+        "timeline_structure_kb103": {
+          "V3_and_V1_teaser_montage": {
+            "total_teaser_clips": "9 to 10 distinct clips (split into 18..20 Part-A / Part-B sub-segments) + 1 nested Warning sequence (0.83s)",
+            "clip_selection_rule": "Cherry-pick 50% from source/itv.kb*.mp4 and 50% from ITV-Moments-script-*/*.mp4 with the sharpest visual impacts (tire crashes, ladder falls, truck cab flips, tree-cutting kickbacks, bike-into-windshield).",
+            "part_A_part_B_razor_rule": "Every teaser clip (duration 0.75s..2.54s) is razor-split on V1, V3, and A1 at the exact onset of physical impact: Part A = Setup/Lead-in (0.50s..1.58s, under VO), Part B = Climax/Impact (0.25s..1.04s, +3dB audio boost or VO pause).",
+            "speed_ramping_rule": "Apply 130%..150% speed (or up to 250%..300% for long approaches) on slow build-up teaser clips so every impact hits within < 1.5s.",
+            "cold_open_clip_1": {
+              "timeline_sec": [0.0, 2.54],
+              "part_A_sec": [0.0, 1.54],
+              "part_B_sec": [1.54, 2.54],
+              "out_transition": "AE.Impact_Cross_Zoom (0.42s, 2.34s..2.75s) on V1 & V3 (or AE.AE_Impact_Warp / AE.AE_Impact_Zoom_Blur)"
+            },
+            "warning_card": {
+              "nested_sequence_name": "Warning",
+              "source_psd": "E:\\Video Asset\\Brand - ITV\\Warning.psd",
+              "timeline_sec": [15.43, 16.27],
+              "duration_sec": 0.83,
+              "source_in_out_sec": [0.92, 1.75],
+              "scale_percent": 114.83,
+              "in_transition": "AE.Impact_Cross_Zoom (0.50s, 15.18s..15.68s) on V1, V2, and V3"
+            }
+          },
+          "V2_brand_frame": {
+            "asset": "E:\\Video Asset\\Brand - ITV\\ChatGPT Image 10_13_03 14 thg 8, 2026.png",
+            "opacity_percent": 99.0,
+            "scale_height_percent": 115.0,
+            "scale_width_percent": 114.7715,
+            "cuts": "Split at Cold Open boundary (2.54s), Warning start (15.43s, with Impact Cross Zoom 15.18s..15.68s), and Main Act 1 start (16.27s)."
+          },
+          "V6_and_V7_branding_gap_rule": {
+            "V6_asset": "E:\\Video Asset\\Brand - ITV\\W-logo.png (Only-Logo.png, top-left)",
+            "V7_asset": "E:\\Video Asset\\Brand - ITV\\wtm.png (bottom-center Opacity=3%)",
+            "rule": "Active during Teaser Montage (0.00s..15.43s), CUT/EMPTY during Warning card (15.43s..16.27s) so logos never clash with Warning.psd, then resume from 16.27s to end of video."
+          },
+          "V8_kinetic_intro_captions": {
+            "font": "Komika Axis (KomikaAxis)",
+            "text_position_normalized": [0.5008, 0.8796],
+            "pop_in_animation": "AE.ADBE Geometry2 Scale keyframed: 0.1% at t+0.00s -> 115.0% at t+0.12s -> 100.0% at t+0.22s, paired with AE.ADBE Motion micro-shake over first 3 frames (Rotation -0.037 to -0.052 deg).",
+            "phrasing_rule": "Split the Intro VO into 8..12 ALL-CAPS phrase cards (2..5 words per card, 0.50s..2.46s duration), tightly synced to A2 vocal phrases and V3 teaser cuts, alternating vibrant fill colors (Yellow, Pink/Magenta, Green, Red) with thick black stroke/shadow.",
+            "kb103_cards": [
+              {"time": [0.0, 1.5], "text": "HELLO EVERYONE!"},
+              {"time": [2.54, 3.29], "text": "READY TO LAUGH AT"},
+              {"time": [3.29, 4.13], "text": "SOME OF THE MOST"},
+              {"time": [4.13, 6.59], "text": "UNBELIEVABLE IDIOTS AT WORK?!"},
+              {"time": [6.59, 7.55], "text": "STICK AROUND"},
+              {"time": [7.55, 8.68], "text": "THIS COMPILATION IS"},
+              {"time": [8.68, 10.34], "text": "PACKED WITH BAD DECISIONS"},
+              {"time": [10.34, 11.43], "text": "BIG FAILS"},
+              {"time": [11.43, 13.43], "text": "AND PLENTY OF INSTANT REGRET!"},
+              {"time": [13.43, 14.56], "text": "LET'S GET STARTED!!!"}
+            ]
+          },
+          "A6_hadeus_music_hook": {
+            "asset": "E:\\Video Asset\\Brand - ITV\\Intro\\Hadeus.mp4",
+            "timeline_sec": [0.0, 16.27],
+            "source_in_out_sec": [0.13, 16.39],
+            "volume_keyframes_linear": [
+              {"time_sec": 0.71, "level_linear": 0.1778, "note": "Strong opening riff (-15 dB linear / -6 dB relative)"},
+              {"time_sec": 1.22, "level_linear": 0.0526, "note": "Duck under VO and teaser impacts (-25.5 dB linear)"},
+              {"time_sec": 14.4, "level_linear": 0.0526, "note": "Hold ducked level until VO CTA finishes"},
+              {"time_sec": 14.77, "level_linear": 0.1446, "note": "Swell back up for final crash & Warning card (-16.8 dB linear)"}
+            ],
+            "out_fade": "Custom Fade audio transition (0.88s, 15.39s..16.27s) ending cleanly at Act 1 start (16.27s)."
+          }
+        }
+      }
+    },
+    "bonk_funny_moments": {
+      "name": "Bonk Funny Moments",
+      "workspace_pattern": "E:\\Bonk funny moments\\project\\kb*",
+      "resolution": [1920, 1080],
+      "fps": 23.976,
+      "tracks": {
+        "V1": "Primary Video Clips",
+        "V2": "Visual Shields / Meme Overlays",
+        "A1": "Original Clip Audio (100% synced with V1)",
+        "A2": "RESERVED 100% EMPTY FOR VOICEOVER",
+        "A3": "Transition SFX",
+        "A4": "Comedy/Bonk Impact SFX"
+      }
+    }
+  },
+  "premiere_cli_fast_execution": {
+    "bridge_endpoint": "http://127.0.0.1:47823/command",
+    "rules": [
+      "Always pass sequenceName explicitly to avoid editing the wrong sequence when multiple projects/sequences are open.",
+      "Use direct HTTP POST to 127.0.0.1:47823/command in batch Python scripts instead of spawning hundreds of subprocesses, reducing 100-clip mutation time from ~4 minutes to <15 seconds.",
+      "Never use seq.overwriteClip for subclip placement without setting both V1 and A1 inPoint/outPoint/start/end atomically.",
+      "Before placing a V2 shield clip via add-to-timeline, call set-item-in-out with V1's exact inPointSeconds and outPointSeconds; add-to-timeline snapshots existing A1 audio nodeIds so A1 is never touched and A2 remains 100% empty."
+    ]
+  }
+}

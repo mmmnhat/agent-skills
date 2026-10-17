@@ -102,12 +102,14 @@ python e:\.agents\skills\content-shield\scripts\shield_cli.py \
 
 ---
 
-## Premiere Pro MCP Integration
+## Premiere Pro CLI & MCP Integration (High-Speed Channel Workflow)
 
-When editing in Premiere Pro:
-1. Footage clips reside on Track `V1`.
-2. Content Shield generates an editorial plan specifying:
-   - Call `add_adjustment_layer` at timeline playhead on track index `1` (`V2`).
-   - Call `crop_clip` with Left/Top/Right/Bottom margins corresponding to the tracked ROI.
-   - Call `apply_effect` (`Gaussian Blur`) with Blurriness $= 35.0$.
-   - If tracked dynamically, calls `add_keyframe` along the clip's duration.
+When shielding watermarks and cropping blurred margins in Premiere Pro via `premiere-cli` (`http://127.0.0.1:47823/command`):
+1. **Unblur & Sidebar Logo Removal (`Track V1`):**
+   - Apply `Crop` (`AE.ADBE AECrop`) directly on `V1` pillarboxed clips (`Left` & `Right` `15.5% – 35%`). This simultaneously strips blurred pillarbox sidebars AND removes sidebar logos (`LA`, `FAILARMY`, `TMAX`, `REC`, `MEC`, `22`).
+2. **Corner/Edge Logo Reframing (`Track V1`):**
+   - Compute `fit_scale = min(1920/w, 1080/h) * 100`. For clips with corner watermarks near the top/bottom edge (`ViralHog`, `DUMPERT`, `ring`, `TMAX`, `LA`, `Reddit`), scale by `~1.15x` (`1920x1080 -> 115%`, `1080x1920 -> 65%`, `720x1280 -> 95%`, `1280x720 -> 168%`) to push edge watermarks cleanly outside the `1080p` frame.
+3. **Deep In-Frame Logo Shield (`Track V2`):**
+   - Call `set-item-in-out` with `V1`'s exact `inPointSeconds` and `outPointSeconds`.
+   - Call `add-to-timeline` on `Track V2` (`trackIndex: 1`, which snapshots existing `A1` audio `nodeId`s and cleans up auto-linked `A2` audio so `A1` is untouched and `A2` stays 100% empty).
+   - Match `V1`'s `Scale`, then apply `Gaussian Blur` (`AE.Impact_Blur_FX`, `Amount: 20`) + `Crop` (`AE.ADBE AECrop`, `Edge Feather: 15`) around the logo ROI.

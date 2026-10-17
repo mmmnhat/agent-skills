@@ -22,5 +22,7 @@ Translates abstract editorial plans (`edit-plan.json` and `patch-plan.json`) int
   - `A5`: Ducked Background Music
 - **Atomic Operations & Checkpoints:**
   - Always create a sequence checkpoint (`create_sequence_checkpoint`) before major mutations.
-  - Apply mutations using batch tools (`add_to_timeline_batch`, `set_clip_properties_batch`).
-  - Read back timeline state via `get_sequence_structure` and `get_track_info` for closed-loop evaluation.
+  - Apply mutations using batch tools (`add_to_timeline_batch`, `set_clip_properties_batch`) or direct HTTP POST to `http://127.0.0.1:47823/command` (`premiere-cli` bridge) so 100+ clip edits complete in < 15 seconds.
+  - Always specify `sequenceName` explicitly to prevent editing the wrong sequence when multiple `.prproj` files are open.
+  - **Zero-Drift V1+A1 Sync:** Never use `seq.overwriteClip` alone for subclips (it ignores `inPoint`/`outPoint` on Premiere 2026 and places untrimmed audio on `A1`). Always set `inPoint`, `outPoint`, `start`, and `end` atomically on both `V1` and `A1` paired clips, and verify with `check-sequence-sync`.
+  - Read back timeline state via `get_sequence_structure` / `get-full-sequence-info` for closed-loop evaluation.
