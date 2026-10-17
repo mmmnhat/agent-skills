@@ -137,6 +137,23 @@ Sau khi dựng sequence hoặc khi người dùng yêu cầu: *"kiểm tra timel
 
 ---
 
+## 🏆 WORKFLOW 6: DỰNG TẬP KÊNH ITV 10-TRACK, INTRO ELEVENLABS V3 & HẬU KIỂM `premiere-cli` (`visioncut`)
+
+Khi làm việc với các project kênh **ITV Moments** (`E:\ITV\Project\kb*`, cấu hình chuẩn tại `skills/visioncut/resources/channel_profiles.json`):
+1. **Xếp Clip 3 Khối (`85–90 clips`, `7m45s – 9m30s`):**
+   - *Khối 1 (`source/itv.kb*.mp4`, ~18–20 clips):* Giữ đúng thứ tự kịch bản (`X-2` đứng trước `X`), cắt sạch bleed đầu/cuối.
+   - *Khối 2 (`ITV-Moments-script-*` có tiếng, `peak_db > -24 dB`):* Xếp tăng dần, cắt 4-Beat + `Dead-Middle Micro-Cut`.
+   - *Khối 3 (`ITV-Moments-script-*` câm, `peak_db <= -25 dB`, 7–11 clips cuối):* Gom về cuối sequence, gỡ bỏ `A1` câm, đặt BGM (`Track A5`) **chỉ phủ đúng các đoạn clip câm** (`Coverage(A1) + Coverage(A5) = 100%`).
+2. **Đặt Emoji (`Track V4`) & Mask Blur (`Track V2`/`V3`) — Bắt Buộc Kiểm Chứng Bằng `premiere-cli export-frame` + `view_file`:**
+   - Tuyệt đối không đoán mù thời điểm va chạm hay tọa độ `(x, y)` trên thumbnail chưa `Scale`/`Crop`.
+   - Quét frame dày đặc (`0.08s–0.10s`) tìm đúng frame bắt đầu va chạm (`0.35s–0.50s`), chọn đúng Emoji ngữ nghĩa (`🙈` `512 (1).gif` chỗ hiểm/hạ bộ, `😵‍💫` `mnhat_emoji_37.gif` đập đầu/mặt, `💥` `512 (4).gif` nổ/đập mạnh, `💨⭐` `512 (7).gif` hỗn loạn, `😹/🐱` trượt ngã hài), đọc tọa độ trên khung `1920x1080` đã `Scale`/`Crop`, đặt `InPoint = 0` và 4 keyframes `Position`, rồi **bắt buộc xuất frame thật từ Premiere Pro qua `premiere-cli export-frame` + `view_file` để hậu kiểm**.
+3. **Căn Đỉnh Sóng Âm SFX (`Track A3`/`A4`):**
+   - Tra cứu `skills/visioncut/resources/sfx_full_catalog.json` (`401` file SFX) và đặt `sfx_start = impact_time - peak_offset_sec`, không đè lên `A2` Voiceover.
+4. **Tạo Intro Voiceover (`Track A2`) Qua `elevenlabs` CLI & Dựng Intro 10-Track (`FailSide` x `ITV`):**
+   - Voice `ITV 5` (`ITLDKaHYPRfCyyrPpZu2`, model `eleven_v3`, `skills/visioncut/resources/itv_voice_config.json`), bọc cặp thẻ `[absurdist narration, accelerando, rushed, extreme fast] ... [accelerando, rushed, energetic, shouting] LET'S GET STARTED!!!`, kiểm tra phát âm bằng `view_file` và cắt rải nhịp linh hoạt (`2..6+` segments) theo vế câu Intro Text.
+
+---
+
 ## 💡 CÁC CÂU LỆNH MẪU NGƯỜI DÙNG THƯỜNG DÙNG (USER PROMPT CHEAT SHEET)
 
 | Mục tiêu của Người Dùng | Câu lệnh người dùng gõ vào chat | Hành động tự động của Agent |
@@ -147,4 +164,6 @@ Sau khi dựng sequence hoặc khi người dùng yêu cầu: *"kiểm tra timel
 | **Thẩm định kho clip có sẵn** | *"Soi và thẩm định giúp tôi folder clip này: E:\clips"* | Chạy Workflow 3: Sinh Filmstrip 4 ô $\to$ AI Vision soi filmstrip $\to$ Báo cáo clip hoàn chỉnh vs clip bị cắt lửng. |
 | **Che logo trên video** | *"Che logo kênh ở góc trên bên phải clip này"* | Chạy Workflow 4: Tracking vùng chọn $\to$ Delogo hoặc chèn Adjustment Layer Premiere Pro. |
 | **Kiểm tra và tự sửa lỗi timeline** | *"Audit timeline Premiere và tự sửa các lỗi lệch sync hoặc hở đen"* | Chạy Workflow 5: Đọc timeline state $\to$ Chạy `HarnessEvaluator` $\to$ Sinh `patch-plan.json` $\to$ Thực thi tự sửa 1 batch. |
+| **Dựng tập ITV 10-track & Intro VO** | *"Dựng tiếp kb106 ITV"* / *"Xào lại intro từ link đối thủ"* | Chạy Workflow 6: Dựng 3 khối $\to$ Batch Unblur/Scale $\to$ Tracked Emoji + Peak SFX + Silent BGM $\to$ Hậu kiểm `premiere-cli export-frame`. |
+
 

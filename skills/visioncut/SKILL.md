@@ -79,10 +79,46 @@ python skills/visioncut/scripts/generate_storyboard.py "<path_to_video>" "state/
    - **Chuẩn hóa `Scale` & Đẩy logo sát mép (`V1`):** Tính `fit_scale = min(1920/w, 1080/h) * 100`. Nếu clip có watermark sát mép trên/dưới (`ViralHog`, `DUMPERT`, `ring`, `TMAX`, `LA`, `Reddit`), nhân thêm `~1.15x` (`1920x1080 -> 115%`, `1080x1920 -> 65%`, `720x1280 -> 95%`, `1280x720 -> 168%`) để đẩy watermark ra ngoài khung `1080p` (đúng chuẩn `kb102`).
    - **Che logo nằm sâu trong hình (`Track V2` Shield):** Gọi `set-item-in-out` khớp `inPointSeconds`/`outPointSeconds` của `V1`, gọi `add-to-timeline` lên `V2` (`trackIndex: 1`, tự động dọn audio thừa trên `A2` mà không chạm vào `A1`), đồng bộ `Scale`, rồi áp `Gaussian Blur` (`AE.Impact_Blur_FX`, `Amount: 20`) + `Crop` (`Edge Feather: 15`) khoanh đúng tọa độ logo.
 
+### Bước 4.2: Quy Trình Dựng Tập Kênh ITV 2 Phần & Hoàn Thiện 10-Track Studio (`kb100..kb110`)
+1. **Cấu Trúc Xếp Clip 3 Khối Chuẩn ITV (`85–90 clips`, tổng thời lượng `7m45s – 9m30s`):**
+   - **Khối 1 — Phần 1 (`source/itv.kb*.mp4`, ~18–20 clips):** Giữ nguyên đúng thứ tự đánh số kịch bản (`1 -> 20`; nếu có cặp `X-2` và `X` thì `X-2` đứng trước `X`), cắt sạch mọi đoạn bleed chuyển cảnh ở đầu/cuối clip.
+   - **Khối 2 — Phần 2 Có Tiếng (`ITV-Moments-script-*/*.mp4` có `peak_db > -24 dB`):** Xếp theo thứ tự số tăng dần (`01 -> 70`), cắt chuẩn 4-Beat (`Premise -> Escalation -> Punchline -> Aftermath`) và dùng `Dead-Middle Micro-Cut` cho các clip chờ dài.
+   - **Khối 3 — Phần 2 Montage Câm (`ITV-Moments-script-*/*.mp4` bị câm hoặc `peak_db <= -25 dB`, 7–11 clips cuối timeline):**
+     - Gom toàn bộ các clip câm ở Phần 2 về cuối sequence (nếu file gốc thiếu stream audio thì mux thêm stereo silent stream trước khi import để đồng bộ 1:1 khi cắt, sau đó khi hoàn thiện 10-track thì gỡ bỏ các `A1` câm trong vùng có BGM).
+     - **Nhạc nền BGM (`Track A5`) CHỈ đặt vào các đoạn clip không có âm thanh gốc:** Chọn nhạc nền đúng nhịp (`Kazoom`, `Angel Lover`, `Greaser`, `ChaCha Fontanez`, `Brain Trust`, `City Blocks`, `Standoff`), đặt trên `Track A5` phủ kín các khoảng clip câm sao cho `Coverage(A1) + Coverage(A5) = 100%` (tuyệt đối không chèn BGM đè lên tiếng hiện trường gốc của các clip có tiếng).
+
+2. **Quy Trình Bắt Buộc Khi Đặt Emoji Che Va Chạm (`Track V4`) & Mask Che Logo (`Track V2`/`V3`) — CẤM ĐOÁN MÙ TỌA ĐỘ:**
+   - **Tuyệt đối cấm** đoán thời điểm va chạm hoặc tọa độ `(x, y)` từ bảng thumbnail thô chưa qua `Scale`/`Crop`, và **tuyệt đối cấm** dùng OpenCV vẽ giả lập thay cho hình xuất thật từ Premiere Pro!
+   - **Quy trình 4 bước `premiere-cli` + AI Vision (`view_file`) bắt buộc:**
+     1. *Dò chính xác thời điểm va chạm bằng dải frame dày đặc (`0.08s – 0.10s/frame`):* Xuất dải frame quanh pha va chạm và gọi `view_file` để chốt chính xác frame bắt đầu chạm (`t_hit_start`) và kết thúc (`t_hit_end`, kéo dài `0.35s – 0.50s`). Không bao giờ đặt emoji sớm khi nhân vật vẫn đang đứng/di chuyển trước lúc va chạm!
+     2. *Chọn đúng Emoji theo bộ phận & ngữ cảnh vật lý (`E:\Video Asset\Animated emojis` / `E:\ITV\rerender\emoji`):*
+        - `🙈` (`512 (1).gif` — `monkey_eyes`): Chỉ dùng khi va đập trực tiếp vào **vùng nhạy cảm / hạ bộ (groin/crotch)** (ví dụ: trượt ván/nhảy cầu đập háng vào thanh sắt/thành hồ).
+        - `😵‍💫` (`mnhat_emoji_37.gif` — `dizzy`): Đập thẳng vào **đầu / mặt / cổ** gây choáng váng.
+        - `💥` (`512 (4).gif` — `bang`): Nổ, sập đồ vật nặng, đập lưng/ngực cực mạnh.
+        - `💨⭐` (`512 (7).gif` — `fight_cloud`): Va chạm hỗn loạn nhiều người/vật thể, sập giàn/thang, lật xe/thuyền.
+        - `😹` (`512 (6).gif` — `laugh_cat`) & `🐱` (`512 (5).gif` — `orange_cat`): Trượt ngã hài hước, quê độ.
+     3. *Đọc tọa độ trên khung `1920x1080` đã áp `Scale` + `Crop` và đặt `InPoint = 0`:* Xuất 4 frame tại `t0, t1, t2, t3` từ sequence `1920x1080` (qua `premiere-cli export-frame` hoặc frame đã áp đúng `Scale`/`Crop` kèm lưới tọa độ `[0.0 .. 1.0]`), gọi `view_file` đọc tọa độ `(x, y)` của đúng bộ phận bị va đập tại cả 4 mốc. Đặt `InPoint = 0` cho clip Emoji trên `Track V4` và ghi 4 keyframe `AE.ADBE Motion -> Position`.
+     4. *Hậu kiểm bắt buộc bằng `premiere-cli export-frame` + `view_file`:* Sau khi đặt Emoji lên `Track V4` (hoặc Masked `AE.Impact_Blur_FX` lên `V3`/`V2`), **bắt buộc** gọi `premiere-cli export-frame --timecode MM:SS:FF` để Premiere Pro xuất frame thực tế và dùng `view_file` kiểm tra mắt thật — đảm bảo Emoji/Blur che trúng 100% điểm va chạm/logo, không bao giờ bị lệch xuống đùi/gối hay lệch khỏi logo!
+
+3. **Căn Đỉnh Sóng Âm SFX Chuẩn Ngữ Cảnh (`Track A3`/`A4` — `resources/sfx_full_catalog.json`):**
+   - Tra cứu `E:\.agents\skills\visioncut\resources\sfx_full_catalog.json` (chứa `dur_sec` và `peak_offset_sec` của 401 file SFX trong `E:\Video Asset\SFX`).
+   - Chọn SFX khớp đúng vật liệu và hành động vật lý (`Body Fall`, `Metal Hit`, `Wood Plank Crash`, `Water Splash`, `Cartoon Slip`, `Bone/Head Bonk`, `Funny Laugh`, `Electricity Spark`, `Tire Explosion`) và đặt điểm bắt đầu theo công thức:
+     $$\text{SFX Start} = \text{Timeline Impact Time} - \text{peak\_offset\_sec}$$
+   - Nếu SFX dài $> 3.2\text{s}$ và `peak_offset_sec > 1.2s`, cắt `inPoint` lùi trước đỉnh `0.8s` để giữ độ dài gọn `2.5s – 3.2s`, và tuyệt đối không đè lên các khoảng có Voiceover trên `Track A2`.
+
+4. **Hoàn Thiện Cấu Trúc 10-Track ITV Studio (`scripts/itv_10track_finisher.py`):**
+   - `Track V1`: Bản sao của `V3` phóng `Scale = 500%` + `Gaussian Blur (Amount = 3)` làm nền mờ lấp đầy khung `16:9` (gỡ bỏ `Lumetri` thừa trên `V1`/`V2`).
+   - `Track V2`: Khung viền thương hiệu PNG (`Opacity = 99%`, `Scale = 115% x 114.77%`) xuyên suốt timeline.
+   - `Track V3`: Clip chính (đã áp `Crop` viền mờ, `Scale` chuẩn hóa, và `AE.Impact_Blur_FX` kèm `Mask2` che watermark góc/đáy).
+   - `Track V4`: Animated Emoji Impact Shields (`0.35s – 0.50s`, 4 keyframes `Position`).
+   - `Track V6` & `V7`: `Only-Logo.png` (góc trên trái) và `wtm.png` (chính giữa dưới, `Opacity = 3%`) xuyên suốt thân bài (ngắt trống tại thẻ `Warning`).
+   - `Track V8`: Phụ đề động `Komika Axis` ở phần Intro và chữ cảnh báo an toàn (`*HE'S FINE`, `*ALL SAFE`, `*DON'T TRY THIS` tại `[0.015625, 0.972222]`) ở thân bài.
+   - `Audio Track Mixer & Essential Sound`: Áp bộ lọc Track Mixer (`Master` Hard Limiter `-1.2 dB`, `A1` Single-band Compressor + Hard Limiter `-1.2 dB`, `A2` `-4.0 dB`, `A3/A4` `-6.0 dB`, `A5` `-7.0 dB`) và gắn tag Essential Sound `Ambience` + `Auto-Match Loudness` + `-25 dB Auto-Ducking` cho toàn bộ clip `A1`. Khi ghi trực tiếp file `.prproj`, luôn chạy `canonicalize_prproj` (BFS ObjectID renumbering từ `Project ObjectID=1`) để Premiere Pro 2026 mở file mượt 100% không lỗi.
+
 ### Bước 4.5: Kỹ Nghệ Dựng Intro Kênh ITV (`kb103` x `FailSide` Hybrid Protocol)
 Khi người dùng yêu cầu viết voice intro, tạo intro hoặc dựng phần mở đầu (`0.00s -> ~16.27s`) cho video kênh ITV (`intro_blueprint` trong `channel_profiles.json`):
 1. **Giọng Đọc & Công Thức "Xào Lại Intro Đối Thủ" Với ElevenLabs `eleven_v3` (`Track A2` — Voice `ITV 5` / `ITLDKaHYPRfCyyrPpZu2`):**
-   - **Cấu hình ElevenLabs (`e:\ITV\itv_voice_config.json`):** Voice `ITV 5` (**Voice ID: `ITLDKaHYPRfCyyrPpZu2`**, `gen_sp100_s50_sb75_v3`: Speed `1.00`, Stability `50%`, Similarity Boost `75%`, Style `0.0`, Speaker Boost `true`, Model `eleven_v3`). Kịch bản dài `18 – 36` từ (`9.5s – 14.8s` file gốc).
+   - **Cấu hình ElevenLabs (`resources/itv_voice_config.json` & `e:\ITV\itv_voice_config.json`):** Voice `ITV 5` (**Voice ID: `ITLDKaHYPRfCyyrPpZu2`**, `gen_sp100_s50_sb75_v3`: Speed `1.00`, Stability `50%`, Similarity Boost `75%`, Style `0.0`, Speaker Boost `true`, Model `eleven_v3`). Kịch bản dài `18 – 36` từ (`9.5s – 14.8s` file gốc).
    - **Quy Trình 3 Bước "Xào Lại" (Spin) Voice Intro Từ Kênh Đối Thủ:**
      1. *Bước 1 — Bóc băng & Tạm dịch câu Intro đối thủ (`00:00:00 -> 00:00:15`):* Trích xuất nguyên văn câu mở đầu từ video đối thủ (ví dụ FailSide Moment `https://youtu.be/0ZjT5dOG8zY` ở `00:00:03 -> 00:00:12`: `"Hello everyone! Are you ready to watch this one and laugh out loud? Let's get started then!"` — *Xin chào mọi người! Các bạn đã sẵn sàng xem video này và cười thật lớn chưa? Nào, bắt đầu thôi!*).
      2. *Bước 2 — Viết lại (Paraphrase & Amplify) sang văn phong ITV:*

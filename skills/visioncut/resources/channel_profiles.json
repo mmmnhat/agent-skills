@@ -86,19 +86,74 @@
           ]
         }
       },
+      "compilation_sequencing_policy": {
+        "total_clips_range": [85, 90],
+        "target_duration_sec_range": [465, 575],
+        "blocks": [
+          {
+            "block": "1. Part 1 (source/itv.kb*.mp4)",
+            "count_range": [18, 20],
+            "ordering_rule": "Keep exact script numbering (1 -> 20; if both X-2 and X exist, place X-2 immediately before X). Trim any transition bleed frames at clip head/tail."
+          },
+          {
+            "block": "2. Part 2 Audible (ITV-Moments-script-*/*.mp4 with peak_db > -24 dB)",
+            "ordering_rule": "Keep ascending numerical order (01 -> 70), cut to 4-Beat Narrative Core (Premise -> Escalation -> Punchline -> Aftermath), apply Dead-Middle Micro-Cut on long wait intervals."
+          },
+          {
+            "block": "3. Part 2 Silent Montage (ITV-Moments-script-*/*.mp4 with peak_db <= -25 dB or missing audio stream)",
+            "count_range": [7, 11],
+            "ordering_rule": "Group all silent Part 2 clips at the end of the timeline, remove dead-silent A1 items, cover 100% of silent intervals with upbeat BGM on Track A5, and layer 2-track SFX (A3 + A4) at every climax."
+          }
+        ]
+      },
       "emoji_impact_shield_policy": {
-        "purpose": "Cover strong physical impacts to the face, head, or body organs (tools kicking back, objects hitting face, head-first slams)",
-        "asset_dir": "E:\\Video Asset\\Animated emojis",
-        "preferred_assets": [
-          "mnhat_emoji_37.gif",
-          "512 (6).gif",
-          "512 (5).gif",
-          "512 (2).gif",
-          "512 (4).gif"
+        "purpose": "Cover strong physical impacts to the face, head, groin/crotch, or body organs (tools kicking back, objects hitting face, groin rail straddles, head-first slams)",
+        "asset_dirs": [
+          "E:\\Video Asset\\Animated emojis",
+          "E:\\ITV\\rerender\\emoji"
         ],
-        "duration_seconds_range": [0.25, 0.50],
-        "scale_range": [12.0, 35.5],
-        "motion_tracking": "3-4 Position keyframes (timeVarying=true) following the head/body recoil over the 6-12 impact frames"
+        "semantic_mapping": {
+          "monkey_eyes": {
+            "file": "512 (1).gif",
+            "emoji": "🙈",
+            "use_case": "Groin/crotch impacts (skateboard rail straddle, pool edge groin hit) or sensitive body spot shield"
+          },
+          "dizzy": {
+            "file": "mnhat_emoji_37.gif",
+            "emoji": "😵‍💫",
+            "use_case": "Direct head, face, or neck hits causing dizziness or knockdown"
+          },
+          "bang": {
+            "file": "512 (4).gif",
+            "emoji": "💥",
+            "use_case": "Explosions, heavy object collapses, hard back/chest slams"
+          },
+          "fight_cloud": {
+            "file": "512 (7).gif",
+            "emoji": "💨⭐",
+            "use_case": "Chaotic multi-person tumbles, ladder/scaffold collapses, vehicle/boat rollovers"
+          },
+          "laugh_cat": {
+            "file": "512 (6).gif",
+            "emoji": "😹",
+            "use_case": "Hilarious slapstick slips, bar chair falls, treadmill wipeouts"
+          },
+          "orange_cat": {
+            "file": "512 (5).gif",
+            "emoji": "🐱",
+            "use_case": "Awkward, cute, or lighthearted tumbles"
+          }
+        },
+        "duration_seconds_range": [0.35, 0.50],
+        "scale_range": [18.0, 45.0],
+        "motion_tracking": "4 Position keyframes (timeVarying=true, InPoint=0) following the exact struck body part across 4 timestamps of the impact window",
+        "mandatory_verification_protocol": [
+          "NEVER guess impact timestamps or (x,y) coordinates from unscaled/uncropped source thumbnails.",
+          "1. Extract a dense frame strip (0.08s..0.10s step) around the climax and inspect with view_file to find the exact frame where physical contact begins (never place the emoji while the subject is still standing/approaching before the hit).",
+          "2. Read normalized (x,y) coordinates [0.0..1.0] directly on the 1920x1080 sequence canvas AFTER V3/V1 Scale and Crop are applied.",
+          "3. Set Emoji clip InPoint = 0 so keyframe ticks [0..dur_ticks] align with timeline playback.",
+          "4. After placement, run premiere-cli export-frame --timecode MM:SS:FF and inspect the exported Premiere Pro frame with view_file to verify the emoji covers the exact target body part."
+        ]
       },
       "safety_context_graphics_policy": {
         "purpose": "Provide bottom-left safety/context disclaimer overlays spanning the full duration of intense/dangerous clips",
@@ -119,7 +174,8 @@
       "sfx_placement_policy": {
         "track": "A3",
         "asset_dir": "E:\\Video Asset\\SFX",
-        "density": "~1 SFX per 20-25s (selective, high-impact moments only; ~23 SFX in 8m15s)",
+        "catalog_file": "E:\\.agents\\skills\\visioncut\\resources\\sfx_full_catalog.json",
+        "density": "~1 SFX per 20-25s (selective, high-impact moments only; ~15-24 SFX in 8m15s)",
         "categories": {
           "physical_impacts_and_falls": [
             "bonk.mp3",
@@ -128,29 +184,60 @@
             "bamboo-hit.mp3",
             "tac.mp3",
             "car-brake.mp3",
+            "quick-car-crash.mp3",
             "body-impact.mp3",
+            "body-fall-sound-effect.mp3",
+            "395325__ihitokage__body-falling-on-the-ground-2_01.mp3",
+            "fall-and-tumble.mp3",
+            "wobbly-junk-crash.mp3",
+            "house-collapse.mp3",
+            "tree_fall_small.mp3",
+            "splash.m4a",
+            "slip.mp3",
+            "slip-2.mp3",
+            "slide-whistle-fall-and-boomp.mp3",
             "hollywoodedge-slide-whistle-in-out-crt057601.mp3"
           ],
           "meme_and_cartoon_reactions": [
             "metal-gear-solid.mp3",
             "oof.mp3",
+            "gmod-fall-damage-1.mp3",
             "rubber-duck.mp3",
             "boin4.mp3",
+            "cartoon-boing-2.mp3",
             "windows-xp-shutdown.mp3",
             "windows-error.mp3",
             "record-scratch.mp3",
-            "duck-quack.mp3"
+            "duck-quack.mp3",
+            "What the.mp3",
+            "Whoa, hold on!.mp3",
+            "ouch.mp3",
+            "(bursts into laughter) Pfft-hahaha!.mp3"
           ],
           "profanity_censor": [
             "censor-beep-1.mp3"
           ]
         },
         "timing_rules": [
-          "Align SFX start with the exact physical climax/impact or comedic reaction frame (+0.7s to +4.3s inside the clip, never blindly at the cut point).",
-          "Avoid overlapping with A2 Voiceover (91% of SFX in kb100 occur in gaps where A2 VO is silent).",
-          "Allow resonant/long-tail SFX (oof, metallic-bonk-and-rattle, taco-bell-bong, car-brake, metal-gear-solid, duck-quack) to L-cut across the scene transition into the next clip rather than hard-cutting at clip end.",
+          "Look up dur_sec and peak_offset_sec in resources/sfx_full_catalog.json and set sfx_start_sec = timeline_impact_sec - peak_offset_sec so the acoustic peak hits on the exact physical impact frame.",
+          "Cap long environmental/crash SFX (>3.2s) to a tight 2.5s..3.2s window around peak_offset_sec.",
+          "Never overlap with A2 Voiceover.",
+          "Allow resonant/long-tail SFX to L-cut across the scene transition into the next clip rather than hard-cutting at clip end.",
           "For profanity censoring, place censor-beep-1.mp3 (~0.21s) on A3 while keyframing A1 volume down over the swear word."
         ]
+      },
+      "silent_clip_bgm_policy": {
+        "track": "A5",
+        "rule": "Place BGM on Track A5 EXCLUSIVELY over clips that have no audible original sound (peak_db <= -25 dB or missing A1 stream), and remove dead-silent A1 clips under BGM intervals so Coverage(A1) + Coverage(A5) = 100%.",
+        "bgm_templates": {
+          "brain_trust": "[none] Brain Trust - Wayne Jones.mp3 (quirky/curious/DIY)",
+          "standoff": "[none] Standoff - Density & Time.mp3 (tense/suspense)",
+          "chacha": "[none] ChaCha Fontanez.mp3 (playful dance/party/pets)",
+          "city_blocks": "[none] City Blocks - TrackTribe.mp3 (smooth urban/street)",
+          "greaser": "[none] Greaser - TrackTribe.mp3 (energetic rockabilly montage)",
+          "kazoom": "[none] Kazoom - Quincas Moreira.mp3 (bouncy cartoon slapstick)",
+          "angel_lover": "[none] Angel Lover - Retro - YouTube.mp3 (upbeat retro groove)"
+        }
       },
       "audio_track_mixer_policy": {
         "description": "Track-level dynamics and peak limiting in AudioTrackGroup (Audio Track Mixer) learned from kb100.prproj",
